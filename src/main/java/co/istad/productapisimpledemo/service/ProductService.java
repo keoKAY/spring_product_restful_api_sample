@@ -9,7 +9,7 @@ import java.util.List;
 
 // For the loosely coupling design
 // This interface will be implemented by other class
-@Service
+
 public interface ProductService {
     ProductResponse createProduct(ProductRequest product);
     List<ProductResponse> findAllProducts();

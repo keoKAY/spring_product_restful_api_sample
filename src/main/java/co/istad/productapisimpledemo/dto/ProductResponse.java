@@ -1,4 +1,9 @@
 package co.istad.productapisimpledemo.dto;
 
-public class ProductResponse {
+public record ProductResponse(
+        Integer id ,
+        String name,
+        String description,
+        Float price
+) {
 }

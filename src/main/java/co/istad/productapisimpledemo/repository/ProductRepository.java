@@ -17,8 +17,35 @@ public class ProductRepository {
         add( new Product(1003,"Sting","Unlimited Sweetness ",0.65f,4));
     }};
 
-    public List<Product> getProductList() {
+    public List<Product> getAllProducts() {
         return productList;
     }
 
+    public Product createProduct(Product product) {
+        productList.add(product);
+        return product;
+    }
+
+    public Product findProductById(Integer id ) {
+        return  productList.stream()
+                .filter(product -> product.getId() == id)
+                .findFirst()
+                .orElse(null);
+    }
+    public boolean deleteProductById(Integer id) {
+        return productList
+                .removeIf(product -> product.getId() == id);
+    }
+
+    // update product by id
+    public Product updateProduct(Product updateProduct ){
+        for(int i = 0 ; i<productList.size(); i++){
+            var product = productList.get(i);
+            if(product.getId() == updateProduct.getId()){
+                productList.set(i, updateProduct);
+                return updateProduct;
+            }
+        }
+        return null;
+    }
 }

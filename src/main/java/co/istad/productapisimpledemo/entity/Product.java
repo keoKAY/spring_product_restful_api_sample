@@ -9,7 +9,6 @@ import lombok.*;
 @Getter
 @Setter
 @ToString
-
 public class Product {
     private int id;
     private String name;

@@ -1,4 +1,8 @@
 package co.istad.productapisimpledemo.dto;
 
-public class ProductRequest {
+public record ProductRequest(
+        String name,
+        String description,
+        Float price
+) {
 }
