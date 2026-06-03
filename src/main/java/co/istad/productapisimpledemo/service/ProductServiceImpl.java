@@ -71,6 +71,7 @@ public class ProductServiceImpl implements ProductService {
     public ProductResponse updateProduct(Integer id , UpdateProductRequest request) {
         // find existing product
         var existingProduct = productRepository.findProductById(id);
+
         if(existingProduct == null) {
             log.info("Product with id {} not found", id);
             // throw exception
@@ -86,6 +87,7 @@ public class ProductServiceImpl implements ProductService {
         productRepository.updateProduct(existingProduct);
         return mapToResponse(existingProduct);
     }
+
 
     @Override
     public boolean deleteProduct(Integer id) {
