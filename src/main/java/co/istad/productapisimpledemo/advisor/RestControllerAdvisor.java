@@ -15,7 +15,19 @@ import java.util.NoSuchElementException;
 @RestControllerAdvice
 public class RestControllerAdvisor {
     // handle not found issue
+    // ExceptionHandler(NoSuchElementException.class)
 
+    @ExceptionHandler(NoSuchElementException.class)
+    public ResponseEntity<ErrorResponse<?>> handleNoSuchElementException(NoSuchElementException ex) {
+        return new ResponseEntity<>(
+                ErrorResponse.builder()
+                        .message(ex.getMessage())
+                        .status(HttpStatus.NOT_FOUND.value())
+                        .timestamp(LocalDateTime.now())
+                        .build(),
+                HttpStatus.NOT_FOUND
+        );
+    }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse<?>> handleMethodNotValidException(MethodArgumentNotValidException exception ){

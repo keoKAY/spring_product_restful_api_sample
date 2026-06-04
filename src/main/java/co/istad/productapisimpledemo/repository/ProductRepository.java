@@ -6,6 +6,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 @Repository
 public class ProductRepository {
@@ -26,11 +27,14 @@ public class ProductRepository {
         return product;
     }
 
+    // Optional<Product> ...
     public Product findProductById(Integer id ) {
         return  productList.stream()
                 .filter(product -> product.getId() == id)
                 .findFirst()
-                .orElse(null);
+                .orElseThrow(
+                        ()-> new NoSuchElementException("Product with ID="+id+" Not Found!")
+                ); // NoSuchElementException
     }
     public boolean deleteProductById(Integer id) {
         return productList
