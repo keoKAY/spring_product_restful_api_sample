@@ -1,9 +1,6 @@
 package co.istad.productapisimpledemo.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.*;
 
 import java.nio.channels.FileLock;
@@ -24,5 +21,9 @@ public class Product {
     private String description;
     private Float price;
     private Integer userId; // user that create the product !
+   // private Integer categoryId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id")
+    private Category category;
 
 }
