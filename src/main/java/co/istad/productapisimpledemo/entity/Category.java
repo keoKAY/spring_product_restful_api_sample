@@ -20,7 +20,7 @@ public class Category {
     private Integer id;
     private String name;
     private String description;
-
+    //
     // one category can have many products
     @OneToMany(mappedBy = "category")
     private List<Product> products;
