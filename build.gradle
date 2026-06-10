@@ -31,21 +31,20 @@ dependencies {
     // mapstruct
     // Source: https://mvnrepository.com/artifact/org.mapstruct/mapstruct
    // implementation 'org.mapstruct:mapstruct:1.7.0.Beta1'
-    implementation 'org.mapstruct:mapstruct:1.7.0.Beta1'
-    annotationProcessor 'org.mapstruct:mapstruct:1.7.0.Beta1'
+
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
     // auto create container
     // spring-data-jpa, will configure datasource for you
+
     //runtimeOnly 'org.springframework.boot:spring-boot-docker-compose'
     testCompileOnly 'org.projectlombok:lombok'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     testAnnotationProcessor 'org.projectlombok:lombok'
 
+    // mapstruct -> for mapping the data
     implementation 'org.mapstruct:mapstruct:1.6.3'
     annotationProcessor 'org.mapstruct:mapstruct-processor:1.6.3'
-
-    // Lombok (Optional, but if used, include the binding)
     annotationProcessor 'org.projectlombok:lombok-mapstruct-binding:0.2.0'
 }
 
