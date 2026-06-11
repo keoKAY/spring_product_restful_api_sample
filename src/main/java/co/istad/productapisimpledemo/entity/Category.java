@@ -20,6 +20,7 @@ public class Category {
     private Integer id;
     private String name;
     private String description;
+    private Boolean isDeleted;
 
     // one category can have many products
     @OneToMany(mappedBy = "category")

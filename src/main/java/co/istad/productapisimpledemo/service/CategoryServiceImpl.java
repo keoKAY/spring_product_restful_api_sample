@@ -33,9 +33,10 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     public CategoryResponse updateCategory(CategoryRequest request) {
+        // Partial updates
         return null;
     }
-
+// soft delete
 
     @Override
     public void deleteCategory(Integer id) {

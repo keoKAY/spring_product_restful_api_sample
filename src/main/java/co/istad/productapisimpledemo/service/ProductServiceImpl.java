@@ -9,6 +9,8 @@ import co.istad.productapisimpledemo.repository.ProductRepositoryOld;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.support.DefaultLifecycleProcessor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.repository.core.support.RepositoryMethodInvocationListener;
 import org.springframework.stereotype.Service;
 
@@ -24,7 +26,20 @@ public class ProductServiceImpl implements ProductService {
    private final ProductRepository productRepository;
    private final ProductMapper productMapper;
 
+    @Override
+    public List<ProductResponse> findAllProducts() {
+        // repository.findAll()
+        return productRepository.findAll()
+                .stream()
+                .map(productMapper::mapToResponse)
+                .toList();
+    }
 
+    @Override
+    public Page<ProductResponse> findAllProducts(Pageable pageable) {
+        return productRepository.findAll(pageable)
+               .map(productMapper::mapToResponse);
+    }
 
 
     @Override
@@ -39,14 +54,6 @@ public class ProductServiceImpl implements ProductService {
 
     }
 
-    @Override
-    public List<ProductResponse> findAllProducts() {
-        // repository.findAll()
-      return productRepository.findAll()
-              .stream()
-              .map(productMapper::mapToResponse)
-              .toList();
-    }
 
     @Override
     public ProductResponse findProductById(Integer id) {
