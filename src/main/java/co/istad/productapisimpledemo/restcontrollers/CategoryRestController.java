@@ -5,6 +5,7 @@ import co.istad.productapisimpledemo.dto.CategoryResponse;
 import co.istad.productapisimpledemo.service.CategoryService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -24,5 +25,11 @@ public class CategoryRestController {
     @PostMapping
     public CategoryResponse createCategory(@Valid @RequestBody CategoryRequest request){
         return categoryService.createCategory(request);
+    }
+
+    @DeleteMapping("/{id}")
+    public Boolean deleteCategory(@PathVariable Integer id) {
+        return categoryService.deleteCategory(id);
+
     }
 }

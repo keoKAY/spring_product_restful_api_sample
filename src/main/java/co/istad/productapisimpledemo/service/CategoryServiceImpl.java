@@ -20,6 +20,11 @@ public class CategoryServiceImpl implements CategoryService {
     public CategoryResponse createCategory(CategoryRequest request) {
         Category category = categoryMapper.toEntity(request);
         // TODO: check if the name already exist
+        if(categoryRepository.existsByName(request.name())){
+            // throw exception handler
+            throw new RuntimeException("category already exists");
+        }
+
         var newCategory = categoryRepository.save(category);
         return categoryMapper.toResponse(newCategory);
     }
@@ -29,9 +34,14 @@ public class CategoryServiceImpl implements CategoryService {
         return null;
     }
 
+
     @Override
-    public CategoryResponse deleteCategory(Integer id) {
-        return null;
+    public Boolean deleteCategory(Integer id) {
+        if(categoryRepository.existsById(id)) {
+            categoryRepository.deleteById(id);
+            return true;
+        }
+        return false;
     }
 
     @Override
