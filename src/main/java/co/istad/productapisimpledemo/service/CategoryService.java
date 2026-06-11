@@ -9,7 +9,7 @@ import java.util.List;
 public interface CategoryService {
     CategoryResponse createCategory(CategoryRequest request);
     CategoryResponse updateCategory(CategoryRequest request);
-    Boolean deleteCategory(Integer id);
+    void deleteCategory(Integer id);
     List<CategoryResponse> findAll();
     CategoryResponse findById(Integer id);
     List<CategoryResponse> findByName(String name);
