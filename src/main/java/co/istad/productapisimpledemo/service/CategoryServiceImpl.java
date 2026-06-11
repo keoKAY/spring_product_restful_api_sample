@@ -22,7 +22,7 @@ public class CategoryServiceImpl implements CategoryService {
     public CategoryResponse createCategory(CategoryRequest request) {
         // map from request to entity
         Category category = categoryMapper.toEntity(request);
-// derived query
+        // derived query
         if(categoryRepository.existsByName(request.name())){
             throw new ResourceAlreadyExistException("Category with name = "+request.name()+" already exists");
         }
