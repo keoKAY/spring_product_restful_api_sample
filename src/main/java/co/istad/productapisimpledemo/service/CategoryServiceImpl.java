@@ -1,5 +1,6 @@
 package co.istad.productapisimpledemo.service;
 
+import co.istad.productapisimpledemo.advisor.ResourceAlreadyExistException;
 import co.istad.productapisimpledemo.dto.CategoryRequest;
 import co.istad.productapisimpledemo.dto.CategoryResponse;
 import co.istad.productapisimpledemo.entity.Category;
@@ -18,11 +19,11 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     public CategoryResponse createCategory(CategoryRequest request) {
+        // map from request to entity
         Category category = categoryMapper.toEntity(request);
-        // TODO: check if the name already exist
+
         if(categoryRepository.existsByName(request.name())){
-            // throw exception handler
-            throw new RuntimeException("category already exists");
+            throw new ResourceAlreadyExistException("Category with name = "+request.name()+" already exists");
         }
 
         var newCategory = categoryRepository.save(category);
