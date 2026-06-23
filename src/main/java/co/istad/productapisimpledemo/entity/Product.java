@@ -23,7 +23,8 @@ public class Product {
 
     private Integer userId; // user that create the product !
    // private Integer categoryId;
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
+    // determined foreign key
     @JoinColumn(name = "category_id")
     private Category category;
 
