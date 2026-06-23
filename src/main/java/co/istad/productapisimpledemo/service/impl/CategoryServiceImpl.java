@@ -1,4 +1,4 @@
-package co.istad.productapisimpledemo.service;
+package co.istad.productapisimpledemo.service.impl;
 
 import co.istad.productapisimpledemo.advisor.ResourceAlreadyExistException;
 import co.istad.productapisimpledemo.dto.CategoryRequest;
@@ -6,6 +6,7 @@ import co.istad.productapisimpledemo.dto.CategoryResponse;
 import co.istad.productapisimpledemo.entity.Category;
 import co.istad.productapisimpledemo.mapper.CategoryMapper;
 import co.istad.productapisimpledemo.repository.CategoryRepository;
+import co.istad.productapisimpledemo.service.CategoryService;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.stereotype.Service;
@@ -22,11 +23,17 @@ public class CategoryServiceImpl implements CategoryService {
     public CategoryResponse createCategory(CategoryRequest request) {
         // map from request to entity
         Category category = categoryMapper.toEntity(request);
+        // if the parent_cateogry_id provided , we validate it first
+        if(request.parentCategoryId()!=null ){
+            // check if it exists
+                var  parentCategory = categoryRepository.findById(request.parentCategoryId()).orElseThrow(()-> new NoSuchElementException("Parent category with id = "+request.parentCategoryId() + " doesn't exists ! "));
+            // add parent category for the newly created category
+            category.setParentCategory(parentCategory);
+        }
         // derived query
         if(categoryRepository.existsByName(request.name())){
             throw new ResourceAlreadyExistException("Category with name = "+request.name()+" already exists");
         }
-
         var newCategory = categoryRepository.save(category);
         return categoryMapper.toResponse(newCategory);
     }

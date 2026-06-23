@@ -1,17 +1,14 @@
-package co.istad.productapisimpledemo.service;
+package co.istad.productapisimpledemo.service.impl;
 import co.istad.productapisimpledemo.dto.ProductRequest;
 import co.istad.productapisimpledemo.dto.ProductResponse;
 import co.istad.productapisimpledemo.dto.UpdateProductRequest;
-import co.istad.productapisimpledemo.entity.Product;
 import co.istad.productapisimpledemo.mapper.ProductMapper;
 import co.istad.productapisimpledemo.repository.ProductRepository;
-import co.istad.productapisimpledemo.repository.ProductRepositoryOld;
+import co.istad.productapisimpledemo.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.support.DefaultLifecycleProcessor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.repository.core.support.RepositoryMethodInvocationListener;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
