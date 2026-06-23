@@ -17,4 +17,8 @@ public interface CategoryService {
     CategoryResponse findById(Integer id);
     List<CategoryResponse> findByName(String name);
 
+
+    // asc , desc
+    List<CategoryResponse> findParentCategories(String sortDirection );
+
 }

@@ -9,6 +9,7 @@ import co.istad.productapisimpledemo.repository.CategoryRepository;
 import co.istad.productapisimpledemo.service.CategoryService;
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -26,7 +27,11 @@ public class CategoryServiceImpl implements CategoryService {
         // if the parent_cateogry_id provided , we validate it first
         if(request.parentCategoryId()!=null ){
             // check if it exists
-                var  parentCategory = categoryRepository.findById(request.parentCategoryId()).orElseThrow(()-> new NoSuchElementException("Parent category with id = "+request.parentCategoryId() + " doesn't exists ! "));
+                var  parentCategory = categoryRepository
+                        .findById(request.parentCategoryId())
+                        .orElseThrow(
+                                ()-> new NoSuchElementException("Parent category with id = "+request.parentCategoryId() + " doesn't exists ! ")
+                        );
             // add parent category for the newly created category
             category.setParentCategory(parentCategory);
         }
@@ -70,5 +75,19 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     public List<CategoryResponse> findByName(String name) {
         return List.of();
+    }
+
+    @Override
+    public List<CategoryResponse> findParentCategories(String sortDirection) {
+        // use "name" of the category to sort
+        Sort sort = Sort.by(Sort.Direction.ASC, "name");
+        if("desc".equalsIgnoreCase(sortDirection)){
+            sort = sort.descending();
+        }else sort = sort.ascending();
+
+        return categoryRepository.findByParentCategoryIsNull(sort)
+                .stream()
+                .map(categoryMapper::toResponse)
+                .toList();
     }
 }

@@ -23,6 +23,10 @@ public class CategoryRestController {
         return categoryService.findAll();
     }
 
+    @GetMapping("/parents")
+    List<CategoryResponse> getParentCategories(@RequestParam("sort") String sortDirection) {
+        return categoryService.findParentCategories(sortDirection);
+    }
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public CategoryResponse createCategory(@Valid @RequestBody CategoryRequest request){
