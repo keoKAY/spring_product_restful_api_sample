@@ -2,8 +2,11 @@ package co.istad.productapisimpledemo.service.impl;
 import co.istad.productapisimpledemo.dto.ProductRequest;
 import co.istad.productapisimpledemo.dto.ProductResponse;
 import co.istad.productapisimpledemo.dto.UpdateProductRequest;
+import co.istad.productapisimpledemo.entity.Tag;
 import co.istad.productapisimpledemo.mapper.ProductMapper;
+import co.istad.productapisimpledemo.repository.CategoryRepository;
 import co.istad.productapisimpledemo.repository.ProductRepository;
+import co.istad.productapisimpledemo.repository.TagRepository;
 import co.istad.productapisimpledemo.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -13,6 +16,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -21,6 +26,9 @@ public class ProductServiceImpl implements ProductService {
     // inject the repository here
     //private final ProductRepositoryOld productRepositoryOld;
    private final ProductRepository productRepository;
+   private final CategoryRepository categoryRepository;
+   private final TagRepository tagRepository;
+
    private final ProductMapper productMapper;
 
     @Override
@@ -43,6 +51,20 @@ public class ProductServiceImpl implements ProductService {
     public ProductResponse createProduct(ProductRequest request) {
         // create entity product from the request
         var product = productMapper.mapToProduct(request);
+        // check if the category exists
+        var category = categoryRepository.findById(request.categoryId()).orElseThrow(
+                ()-> new NoSuchElementException("Category with id = "+request.categoryId()+ " not found! ")
+        );
+        product.setCategory(category);
+        // convert Set<Long> to Set<Tag>
+        // getReferenceById vs findById
+        if(request.tagIds() != null &&  !request.tagIds().isEmpty()) {
+            Set<Tag> tags = request.tagIds().stream()
+                    .map(tagId -> tagRepository.getReferenceById(tagId))
+                    .collect(Collectors.toSet());
+
+            product.setTags(tags);
+        }
         // set static userID
         product.setUserId(1);
       // insert the data to the table only need to
