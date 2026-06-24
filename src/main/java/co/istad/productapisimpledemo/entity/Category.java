@@ -27,6 +27,9 @@ public class Category {
 
     private String icon; // store the icon url
 
+
+
+    // ex. Comment-Replies
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_category_id")
     private Category parentCategory;
