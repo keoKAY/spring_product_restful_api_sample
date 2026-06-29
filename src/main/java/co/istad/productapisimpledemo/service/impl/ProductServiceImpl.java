@@ -62,9 +62,11 @@ public class ProductServiceImpl implements ProductService {
             Set<Tag> tags = request.tagIds().stream()
                     .map(tagId -> tagRepository.getReferenceById(tagId))
                     .collect(Collectors.toSet());
-
+//
             product.setTags(tags);
         }
+
+
         // set static userID
         product.setUserId(1);
       // insert the data to the table only need to
