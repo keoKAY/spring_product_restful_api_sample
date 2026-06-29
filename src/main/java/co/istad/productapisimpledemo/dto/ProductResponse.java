@@ -8,6 +8,7 @@ public record ProductResponse(
         String description,
         Float price,
         CategoryResponse category,
-        Set<TagResponse> tags
+       Set<TagResponse> tags
+       // Set<String> tags
 ) {
 }
