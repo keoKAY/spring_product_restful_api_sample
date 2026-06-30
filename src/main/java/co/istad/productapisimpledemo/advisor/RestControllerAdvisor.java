@@ -27,7 +27,7 @@ public class RestControllerAdvisor {
     }
     // handle not found issue
     // ExceptionHandler(NoSuchElementException.class)
-    @ExceptionHandler(NoSuchElementException.class)
+    @ExceptionHandler({NoSuchElementException.class})
     public ResponseEntity<ErrorResponse<?>> handleNoSuchElementException(NoSuchElementException ex) {
         return new ResponseEntity<>(
                 ErrorResponse.builder()
