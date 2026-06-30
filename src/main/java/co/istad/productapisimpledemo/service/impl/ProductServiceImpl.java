@@ -60,14 +60,12 @@ public class ProductServiceImpl implements ProductService {
         // getReferenceById vs findById
         if(request.tagIds() != null &&  !request.tagIds().isEmpty()) {
             Set<Tag> tags = request.tagIds().stream()
-                    .map(tagId -> tagRepository.getReferenceById(tagId))
+                    .map(tagId -> tagRepository.findById(tagId).orElseThrow(
+                            ()-> new NoSuchElementException("Tag with id = "+tagId+ " not found! ")
+                    ))
                     .collect(Collectors.toSet());
-//
             product.setTags(tags);
         }
-
-
-
       // insert the data to the table only need to
         // repository.save(entity) = insert
         return productMapper.mapToResponse(productRepository.save(product));

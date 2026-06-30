@@ -26,6 +26,7 @@ public class Product {
     private BigDecimal price;// unitPrice
     private Boolean isAvailable=true;
     private Boolean isDeleted=false; // soft Delete
+    // will create the utilities class in order to generate this
     private String slug; // for seo purpose
     private String thumbnail; // for product image
     private Integer qty;
