@@ -3,6 +3,7 @@ package co.istad.productapisimpledemo.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.nio.channels.FileLock;
 import java.util.HashSet;
 import java.util.Set;
@@ -21,13 +22,13 @@ public class Product {
     private Integer id;
     private String name;
     private String description;
-    private Float price;
-
-    private Integer userId; // user that create the product !
-   // private Integer categoryId;
-
-
-
+    // for currency
+    private BigDecimal price;// unitPrice
+    private Boolean isAvailable=true;
+    private Boolean isDeleted=false; // soft Delete
+    private String slug; // for seo purpose
+    private String thumbnail; // for product image
+    private Integer qty;
     @ManyToMany
     @JoinTable(
             name = "product_tags",

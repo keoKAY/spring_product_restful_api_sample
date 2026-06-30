@@ -1,4 +1,6 @@
-package co.istad.productapisimpledemo.dto;
+package co.istad.productapisimpledemo.dto.product;
+
+import co.istad.productapisimpledemo.dto.CategoryResponse;
 
 import java.util.Set;
 

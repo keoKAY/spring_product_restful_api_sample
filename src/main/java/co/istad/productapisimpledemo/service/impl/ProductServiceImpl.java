@@ -1,7 +1,7 @@
 package co.istad.productapisimpledemo.service.impl;
-import co.istad.productapisimpledemo.dto.ProductRequest;
-import co.istad.productapisimpledemo.dto.ProductResponse;
-import co.istad.productapisimpledemo.dto.UpdateProductRequest;
+import co.istad.productapisimpledemo.dto.product.ProductRequest;
+import co.istad.productapisimpledemo.dto.product.ProductResponse;
+import co.istad.productapisimpledemo.dto.product.UpdateProductRequest;
 import co.istad.productapisimpledemo.entity.Tag;
 import co.istad.productapisimpledemo.mapper.ProductMapper;
 import co.istad.productapisimpledemo.repository.CategoryRepository;
@@ -67,8 +67,7 @@ public class ProductServiceImpl implements ProductService {
         }
 
 
-        // set static userID
-        product.setUserId(1);
+
       // insert the data to the table only need to
         // repository.save(entity) = insert
         return productMapper.mapToResponse(productRepository.save(product));

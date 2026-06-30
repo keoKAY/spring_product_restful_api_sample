@@ -1,12 +1,10 @@
 package co.istad.productapisimpledemo.service;
 
-import co.istad.productapisimpledemo.dto.ProductRequest;
-import co.istad.productapisimpledemo.dto.ProductResponse;
-import co.istad.productapisimpledemo.dto.UpdateProductRequest;
-import co.istad.productapisimpledemo.entity.Product;
+import co.istad.productapisimpledemo.dto.product.ProductRequest;
+import co.istad.productapisimpledemo.dto.product.ProductResponse;
+import co.istad.productapisimpledemo.dto.product.UpdateProductRequest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
 
 import java.util.List;
 
