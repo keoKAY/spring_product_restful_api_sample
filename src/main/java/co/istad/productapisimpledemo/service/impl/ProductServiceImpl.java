@@ -50,6 +50,10 @@ public class ProductServiceImpl implements ProductService {
     public ProductResponse createProduct(ProductRequest request) {
         // create entity product from the request
         var product = productMapper.mapToProduct(request);
+
+        // setAvailability to True
+        product.setIsAvailable(true);
+
         // check if the category exists
         var category = categoryRepository.findById(request.categoryId()).orElseThrow(
                 ()-> new NoSuchElementException("Category with id = "+request.categoryId()+ " not found! ")

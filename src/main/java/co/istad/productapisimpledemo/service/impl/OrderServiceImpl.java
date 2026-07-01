@@ -74,15 +74,12 @@ public class OrderServiceImpl implements OrderService {
         // product2 10$   10units
         // 10x5 = 50
         // 10x10 = 100
-        BigDecimal subTotal = orderLines.stream()
-                // qty x unitPrice
-                .map(line-> line.getUnitPrice().multiply(BigDecimal.valueOf(line.getQty())) )
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-        BigDecimal total = subTotal.subtract(discount);
+
+       // BigDecimal total = subTotal.subtract(discount);
 
         Order savedOrder = orderRepository.save(order);
        // return orderMapper.toOrderResponse(savedOrder);
-        return new OrderResponse(
+        /*return new OrderResponse(
             savedOrder.getId(),
             customer.getId(),
             customer.getEmail(),
@@ -91,13 +88,25 @@ public class OrderServiceImpl implements OrderService {
             discount,
             total,
             savedOrder.getOrderedAt(),
-                null
-        );
-    }
+                savedOrder.getItems().stream()
+                        .map(item-> new OrderItemResponse(
+                               item.getId(),
+                               item.getProduct().getName(),
+                               item.getProduct().getThumbnail(),
+                               item.getQty(),
+                                item.getUnitPrice(),
+                                item.getUnitPrice().multiply(BigDecimal.valueOf(item.getQty()))
+                                )
+                ).toList()
+        );*/
 
+        return orderMapper.toOrderResponse(savedOrder);
+    }
     @Override
     public List<OrderResponse> getAllOrders() {
-        return List.of();
+        return orderRepository.findAll()
+                .stream().map(orderMapper::toOrderResponse)
+                .toList();
     }
 
     @Override

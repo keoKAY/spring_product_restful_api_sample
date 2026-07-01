@@ -24,6 +24,7 @@ public class Product {
     private String description;
     // for currency
     private BigDecimal price;// unitPrice
+    // validate default value here
     private Boolean isAvailable=true;
     private Boolean isDeleted=false; // soft Delete
     // will create the utilities class in order to generate this
