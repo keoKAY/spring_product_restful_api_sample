@@ -46,7 +46,6 @@ public class ProductServiceImpl implements ProductService {
                .map(productMapper::mapToResponse);
     }
 
-
     @Override
     public ProductResponse createProduct(ProductRequest request) {
         // create entity product from the request
