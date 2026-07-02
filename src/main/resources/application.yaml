@@ -1,4 +1,8 @@
 spring:
+#    security:
+#      user:
+#        name: developer
+#        password: pass12345
     application:
       name: product-api-simple-demo
 # jpa, postgres
