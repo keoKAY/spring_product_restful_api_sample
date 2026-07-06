@@ -1,5 +1,6 @@
 package co.istad.productapisimpledemo.restcontrollers;
 
+import co.istad.productapisimpledemo.dto.ProductFilter;
 import co.istad.productapisimpledemo.dto.product.ProductRequest;
 import co.istad.productapisimpledemo.dto.product.ProductResponse;
 import co.istad.productapisimpledemo.dto.product.UpdateProductRequest;
@@ -17,9 +18,10 @@ public class ProductRestController {
     private final ProductService productService;
 
     @GetMapping
-    public Page<ProductResponse> getProducts(Pageable pageable) {
-        return productService.findAllProducts(pageable);
+    public Page<ProductResponse> getProducts(ProductFilter filter, Pageable pageable) {
+        return productService.findAllProducts(pageable, filter);
     }
+
 
     // find product by id
     // localhost:8080/api/v1/products/1001

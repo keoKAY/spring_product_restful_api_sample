@@ -1,5 +1,6 @@
 package co.istad.productapisimpledemo.service;
 
+import co.istad.productapisimpledemo.dto.ProductFilter;
 import co.istad.productapisimpledemo.dto.product.ProductRequest;
 import co.istad.productapisimpledemo.dto.product.ProductResponse;
 import co.istad.productapisimpledemo.dto.product.UpdateProductRequest;
@@ -16,7 +17,7 @@ public interface ProductService {
     List<ProductResponse> findAllProducts();
 
     // for the pagination support when get all products
-    Page<ProductResponse> findAllProducts(Pageable pageable);
+    Page<ProductResponse> findAllProducts(Pageable pageable, ProductFilter filter);
     // Page<ProductResponse> name(String keywords, Pageable page);
 
     ProductResponse findProductById(Integer id);

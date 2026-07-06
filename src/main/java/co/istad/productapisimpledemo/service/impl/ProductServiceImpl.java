@@ -1,7 +1,10 @@
 package co.istad.productapisimpledemo.service.impl;
+import co.istad.productapisimpledemo.dto.ProductFilter;
 import co.istad.productapisimpledemo.dto.product.ProductRequest;
 import co.istad.productapisimpledemo.dto.product.ProductResponse;
 import co.istad.productapisimpledemo.dto.product.UpdateProductRequest;
+import co.istad.productapisimpledemo.entity.Product;
+import co.istad.productapisimpledemo.entity.ProductSpecification;
 import co.istad.productapisimpledemo.entity.Tag;
 import co.istad.productapisimpledemo.mapper.ProductMapper;
 import co.istad.productapisimpledemo.repository.CategoryRepository;
@@ -12,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -41,8 +45,9 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public Page<ProductResponse> findAllProducts(Pageable pageable) {
-        return productRepository.findAll(pageable)
+    public Page<ProductResponse> findAllProducts(Pageable pageable, ProductFilter filter ) {
+        Specification<Product> spec = ProductSpecification.filterProduct(filter);
+        return productRepository.findAll(spec, pageable)
                .map(productMapper::mapToResponse);
     }
 
