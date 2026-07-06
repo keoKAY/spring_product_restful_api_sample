@@ -8,6 +8,9 @@ import co.istad.productapisimpledemo.service.FileUploadService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -18,6 +21,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -43,16 +47,41 @@ public class FileUploadServiceImpl implements FileUploadService {
 
     @Override
     public FileResponse findByName(String name) {
-        return null;
+        var file =  fileRepository.findByName(name).orElseThrow(
+                ()-> new NoSuchElementException("File with name " + name + " not found")
+        );
+        return fileUploadMapper.mapToResponse(file);
     }
 
     @Override
     public Page<FileResponse> findAll(int pageNumber, int pageSize) {
-        return null;
+        Sort sortById = Sort.by(Sort.Direction.DESC, "id");
+        Pageable pageable = PageRequest.of(pageNumber, pageSize, sortById);
+
+        return fileRepository.findAll(pageable)
+                .map(fileUploadMapper::mapToResponse);
     }
 
     @Override
     public void deleteByName(String name) {
+        var file =  fileRepository.findByName(name).orElseThrow(
+                ()-> new NoSuchElementException("File with name " + name + " not found")
+        );
+        fileRepository.delete(file);
+        // delete inside the storageLocation
+        String fullPath = fileStorageLocation + file.getName()+"."+file.getExtension();
+        Path pathToDelete = Paths.get(fullPath);
+        try {
+          var result =   Files.deleteIfExists(pathToDelete);
+          if(!result){
+              throw new NoSuchElementException("File with name " + name + " not found");
+          }
+        } catch (IOException e) {
+            // TODO: customize and handle later
+            e.printStackTrace();
+            throw new RuntimeException("File with name " + name + " not found");
+        }
+
 
     }
 
@@ -68,7 +97,6 @@ public class FileUploadServiceImpl implements FileUploadService {
 
       //  validateFile(ext);
         String filename = name + "."+ext ;
-
         // 3. construct path (/User/kk/Engineering/ite-images/uuid.png)
         Path path = Paths.get(fileStorageLocation+ filename);
 
