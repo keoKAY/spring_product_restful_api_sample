@@ -4,7 +4,11 @@ file:
     base-url: http://localhost:${server.port}${file.client-path}/
 # http://localhost:8080/files/
 spring:
-#    security:
+    servlet:
+      multipart:
+        max-file-size: 10MB # max allocation for single file size
+        max-request-size: 30MB # ... for the whole request
+  #    security:
 #      user:
 #        name: developer
 #        password: pass12345

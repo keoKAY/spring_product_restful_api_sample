@@ -19,6 +19,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -35,7 +36,9 @@ public class FileUploadServiceImpl implements FileUploadService {
 
     @Override
     public List<FileResponse> uploadMultipleFiles(List<MultipartFile> files) {
-        return List.of();
+        return files.stream()
+                .map(this::uploadFile)
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -61,6 +64,9 @@ public class FileUploadServiceImpl implements FileUploadService {
         // file.myimage.png -> png ,pdf
         String ext = file.getOriginalFilename()
                     .substring(file.getOriginalFilename().lastIndexOf(".")+1);
+
+
+      //  validateFile(ext);
         String filename = name + "."+ext ;
 
         // 3. construct path (/User/kk/Engineering/ite-images/uuid.png)

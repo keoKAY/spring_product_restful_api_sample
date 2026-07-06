@@ -13,6 +13,8 @@ public class ResourceHandlerConfig implements WebMvcConfigurer {
     @Value("${file.storage-location}")
     private  String storageLocation;
 
+
+    // localhost:8080/files/filename.png
     // files/filename........
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {

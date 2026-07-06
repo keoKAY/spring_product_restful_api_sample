@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/v1/files")
 @RequiredArgsConstructor
@@ -21,5 +23,10 @@ public class FileUploadRestController {
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public FileResponse uploadFile(@RequestPart MultipartFile file) {
         return fileUploadService.upload(file);
+    }
+
+    @PostMapping("/multiple")
+    public List<FileResponse> uploadMultipleFiles(@RequestPart List<MultipartFile> files) {
+        return fileUploadService.uploadMultipleFiles(files);
     }
 }
