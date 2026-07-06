@@ -35,7 +35,14 @@ public class SecurityConfiguration {
         // endpoint to be allowed or protected
         http.authorizeHttpRequests(
                 request->
-           request.requestMatchers(HttpMethod.GET, "/api/v1/categories/**").permitAll()
+
+           request
+                   // enable scalar
+                   .requestMatchers("/scalar/**", "/v3/api-docs/**").permitAll()
+                   .requestMatchers("/api/v1/files/**","/files/**").permitAll()
+                   .requestMatchers(HttpMethod.GET, "/api/v1/categories/**").permitAll()
+                   // file uploads
+
             .requestMatchers(HttpMethod.GET, "/api/v1/products/**","/api/v1/tags/**").permitAll()
               // login successfully first to access it
                 .anyRequest().authenticated()

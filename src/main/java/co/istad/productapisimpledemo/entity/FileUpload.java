@@ -2,12 +2,16 @@ package co.istad.productapisimpledemo.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "files_tbl")
 @AllArgsConstructor
 @NoArgsConstructor
+@Getter
+@Setter
 public class FileUpload {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
