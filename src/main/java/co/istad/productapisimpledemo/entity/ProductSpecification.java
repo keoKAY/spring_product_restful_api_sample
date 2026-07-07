@@ -12,7 +12,6 @@ import java.util.List;
 public class ProductSpecification {
     public static Specification<Product> filterProduct(ProductFilter filter) {
         return  (root, query, criteriaBuilder) -> {
-
             // list condition
             List<Predicate> predicates = new ArrayList<>();
 
@@ -53,7 +52,7 @@ public class ProductSpecification {
                 // tagsJoin.get("name")
                 predicates.add(tagsJoin.get("name").in(filter.getTagNames()));
                 // Ensure distinct results if a product has multiple matching tags
-              //  query.distinct(true);
+              query.distinct(true);
             }
 
 

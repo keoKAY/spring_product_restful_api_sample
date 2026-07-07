@@ -8,5 +8,6 @@ import java.util.Optional;
 
 @Repository
 public interface FileRepository extends JpaRepository<FileUpload, Long> {
+    // find the file by name inside the table
     Optional<FileUpload> findByName(String name);
 }

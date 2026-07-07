@@ -94,7 +94,9 @@ public class FileUploadServiceImpl implements FileUploadService {
                     .substring(file.getOriginalFilename().lastIndexOf(".")+1);
 
 
-      //  validateFile(ext);
+      // TODO: validateFileExtension(ext);
+        // allowLists , deniedList
+
         String filename = name + "."+ext ;
         // 3. construct path (/User/kk/Engineering/ite-images/uuid.png)
         Path path = Paths.get(fileStorageLocation+ filename);

@@ -12,8 +12,6 @@ public class ResourceHandlerConfig implements WebMvcConfigurer {
     private  String clientPath;
     @Value("${file.storage-location}")
     private  String storageLocation;
-
-
     // localhost:8080/files/filename.png
     // files/filename........
     @Override

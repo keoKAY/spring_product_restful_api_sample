@@ -8,6 +8,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
+
 public interface FileUploadService {
     FileResponse upload(MultipartFile file);
     List<FileResponse> uploadMultipleFiles(List<MultipartFile> files);
