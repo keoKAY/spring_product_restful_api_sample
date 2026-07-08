@@ -22,7 +22,6 @@ public class HomeController {
 
         // 2. Fetch the Access Token
         String accessToken = authorizedClient.getAccessToken().getTokenValue();
-
         // 3. Fetch the Refresh Token (Will be present because of 'offline_access' scope)
         String refreshToken = authorizedClient.getRefreshToken() != null
                 ? authorizedClient.getRefreshToken().getTokenValue()
