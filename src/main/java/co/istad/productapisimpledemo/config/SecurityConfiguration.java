@@ -29,12 +29,15 @@ public class SecurityConfiguration {
         http.csrf(AbstractHttpConfigurer::disable);
         // 2. disable form login
         http.formLogin(AbstractHttpConfigurer::disable);
-        // 3. make it become stateless for REST constraint
-        http.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+        // 3. make it become stateless for REST constraint -> not when work with oauth2
+        //http.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED));
        // http.httpBasic(Customizer.withDefaults());
+
+
         http.oauth2Login(oauth2 ->
                 // this activates the automatic redirect to keycloak login form.
                 oauth2.defaultSuccessUrl("/home", true ));
+        http.oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()));
         // endpoint to be allowed or protected
         http.authorizeHttpRequests(
                 request->

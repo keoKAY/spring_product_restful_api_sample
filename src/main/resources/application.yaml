@@ -27,9 +27,10 @@ spring:
             keycloak:
               # change your actual keycloak host port and realm name
               issuer-uri: ${keycloak.server-url}/realms/${keycloak.realm}
-
-# http://localhost:9999/realms/ecommerce_realm/protocol/openid-connect/auth?response_type=code&client_id=spring-boot-app&scope=openid%20profile%20email%20offline_access&state=pXQagQzskqEuZNN9jh8SqIk9PH2plL9Q0Pykv0cvMi8%3D&redirect_uri=http://localhost:8080/login/oauth2/code/keycloak&nonce=S6xGCibWzO5FmTEoqvoCaJuqMs3cbYQX2huh1YLJMDk&code_challenge=j2uR-4w4sldLtbd6V8zSJq9Ru7K8YvahybY85l7y89k&code_challenge_method=S256
-
+        # In order to verify the token being sent to client
+        resourceserver:
+          jwt:
+            issuer-uri: http://localhost:9999/realms/ecommerce_realm
 
     servlet:
       multipart:
