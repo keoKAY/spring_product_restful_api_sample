@@ -1,9 +1,32 @@
+
+# configuration to enable the user creations inside the keycloak
+keycloak:
+    server-url: http://localhost:9999
+    realm: ecommerce_realm
+    client-secret: bK6I3SHJV3qgBsxv7wB3KyEamlcDwiO8
+    client-id: spring-boot-app
+
+
 file:
     client-path: /files
     storage-location: /Users/kk/Engineering/ite-images/
     base-url: http://localhost:${server.port}${file.client-path}/
 # http://localhost:8080/files/
 spring:
+    security:
+      oauth2:
+        client:
+          registration:
+            keycloak:
+              client-id: "sring-boot-app"
+              client-secret: ""
+              scope: openid, profile, email, offline_access
+              authorization-grant-type: authorization_code
+              redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+          provider:
+            keycloak:
+              # change your actual keycloak host port and realm name
+              issuer-uri: ${keycloak.server-url}/realms/${keycloak.realm}
     servlet:
       multipart:
         max-file-size: 10MB # max allocation for single file size
