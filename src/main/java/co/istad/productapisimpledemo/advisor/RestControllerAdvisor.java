@@ -14,6 +14,15 @@ import java.util.NoSuchElementException;
 
 @RestControllerAdvice
 public class RestControllerAdvisor {
+    @ExceptionHandler(KeycloakOperationException.class)
+    public ResponseEntity<ErrorResponse<?>> handleKeycloak(KeycloakOperationException ex){
+        return ResponseEntity
+                .status(ex.getStatus())
+                .body(ErrorResponse.builder().message(ex.getMessage())
+                        .timestamp(LocalDateTime.now())
+                        .status(ex.getStatus().value())
+                        .build());
+    }
 
     @ExceptionHandler(ResourceAlreadyExistException.class)
     public ResponseEntity<ErrorResponse<?>> handleResourceAlreadyExistException(ResourceAlreadyExistException ex) {

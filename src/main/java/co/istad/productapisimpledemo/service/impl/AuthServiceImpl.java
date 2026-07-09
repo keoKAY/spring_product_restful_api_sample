@@ -1,5 +1,6 @@
 package co.istad.productapisimpledemo.service.impl;
 
+import co.istad.productapisimpledemo.advisor.KeycloakOperationException;
 import co.istad.productapisimpledemo.dto.auth.RegisterRequest;
 import co.istad.productapisimpledemo.dto.auth.RegisterResponse;
 import co.istad.productapisimpledemo.entity.Profile;
@@ -61,6 +62,7 @@ public class AuthServiceImpl implements AuthService {
         // send the creation request to the keycloak user
         var userResource  = keycloak.realm(realm).users();
        try(var response = userResource.create(user)){
+           int status = response.getStatus(); // getting the status values
             log.info("Response status code: {}", response.getStatus());
             if(response.getStatus() == HttpStatus.CREATED.value()){
                 var createdUser = userResource.search(user.getUsername())
@@ -69,9 +71,37 @@ public class AuthServiceImpl implements AuthService {
                 log.info("Created user: {}", createdUser);
                 return userMapper.toRegisterResponse(createdUser);
             }
+        String error= "";
+            try{
+                error = response.readEntity(String.class);
+            }catch(Exception ignored){}
 
+           switch(status){
+            case 409 -> throw new KeycloakOperationException(
+                    HttpStatus.CONFLICT,
+                    "Username or email already exists "
+            );
+            case 400 -> throw new KeycloakOperationException(
+                    HttpStatus.BAD_REQUEST,
+                    error
+            );
+            default ->
+                throw new KeycloakOperationException(
+                        HttpStatus.INTERNAL_SERVER_ERROR,
+                        "Failed to create the user in keycloak "
+                );
+
+           }
+       }catch(KeycloakOperationException ex ){
+           throw ex ;
+       }catch (Exception ex ){
+           log.error("Keycloak error : ", ex );
+           throw new KeycloakOperationException(
+                   HttpStatus.INTERNAL_SERVER_ERROR,
+                   "Unable to communicate with keycloak"
+           );
        }
-    return null;
+
     }
 
     @Override
