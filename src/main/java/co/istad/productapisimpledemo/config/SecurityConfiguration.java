@@ -23,8 +23,12 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -34,47 +38,49 @@ public class SecurityConfiguration {
     // SecurityFilterChain
     @Bean
     public SecurityFilterChain configure(HttpSecurity http) throws Exception {
-        // 1. disable csrf  -> for stateless application
+
+
         http.csrf(AbstractHttpConfigurer::disable);
-        // 2. disable form login
         http.formLogin(AbstractHttpConfigurer::disable);
+        http.cors(Customizer.withDefaults());
 
-        // 3. make it become stateless for REST constraint -> not when work with oauth2
+         http.sessionManagement(
+                 session ->
+                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
-         http.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
-       // http.httpBasic(Customizer.withDefaults());
+        http.oauth2ResourceServer(
+                oauth2 -> oauth2.jwt(Customizer.withDefaults())
+        );
 
-        //        http.oauth2Login(oauth2 ->
-        //                // this activates the automatic redirect to keycloak login form.
-        //                oauth2.defaultSuccessUrl("/home", true )
-        //        );
-
-
-        // endpoint to be allowed or protected
         http.authorizeHttpRequests(
                 request->
            request
-                   .requestMatchers("/api/v1/auth/**").permitAll()
-                   // enable scalar
-                   .requestMatchers("/scalar/**", "/v3/api-docs/**").permitAll()
-                   .requestMatchers("/api/v1/files/**","/files/**").permitAll()
+                   // 1. ALWAYS permit OPTIONS for CORS pre-flights (crucial for frontend clients)
+                   .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                   .requestMatchers(
+                           "/api/v1/authenticate",
+                           "/api/v1/authenticate/**","/error").permitAll()
+                   .requestMatchers(
+                           "/scalar/**",
+                           "/v3/api-docs/**").permitAll()
+                   .requestMatchers(
+                           "/api/v1/files/**",
+                           "/files/**").permitAll()
                    .requestMatchers(HttpMethod.GET,
                            "/api/v1/categories/**").permitAll()
-                   // file uploads
-                   .requestMatchers(HttpMethod.GET,
-                           "/api/v1/products/**",
+
+                   .requestMatchers(
+                           "/api/v1/products/**", "/api/v1/tags",
                            "/api/v1/tags/**").permitAll()
               // login successfully first to access it
                 .anyRequest().authenticated()
         );
-//        http.oauth2ResourceServer(
-//                oauth2 -> oauth2.jwt(Customizer.withDefaults())
-//        );
-        http.oauth2ResourceServer(oauth2 ->
+
+/*        http.oauth2ResourceServer(oauth2 ->
                 oauth2.jwt(jwt ->
                         jwt.jwtAuthenticationConverter(jwtAuthenticationConverterForKeycloak())
                 )
-        );
+        );*/
         return http.build();
     }
 
@@ -95,5 +101,18 @@ public class SecurityConfiguration {
         jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(converter);
         return jwtAuthenticationConverter;
 
+    }
+
+    @Bean
+    CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration config = new CorsConfiguration();
+        config.setAllowedOriginPatterns(List.of("*"));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedHeaders(List.of("*"));
+        config.setAllowCredentials(true);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+        return source;
     }
 }

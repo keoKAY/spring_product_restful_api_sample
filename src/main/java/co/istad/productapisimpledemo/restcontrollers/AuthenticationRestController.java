@@ -16,9 +16,9 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 
 // Authorization Code Flow
-    @RestController
+@RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1/auth")
+@RequestMapping("/api/v1/authenticate")
 public class AuthenticationRestController {
     //private final OAuth2AuthorizedClientService authorizedClientService;
     private final AuthService authService;
@@ -27,6 +27,10 @@ public class AuthenticationRestController {
     @PostMapping("/register")
     public RegisterResponse createNewAccount(@Valid @RequestBody RegisterRequest request ){
         return authService.register(request);
+    }
+    @GetMapping
+    public String test(){
+        return "test";
     }
  /*   @GetMapping("/get-token")
     public Map<String, String> getTokens(@AuthenticationPrincipal OidcUser principal) {

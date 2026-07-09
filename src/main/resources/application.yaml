@@ -15,22 +15,23 @@ file:
 spring:
     security:
       oauth2:
-        client:
-          registration:
-            keycloak:
-              client-id: "spring-boot-app"
-              client-secret: "bK6I3SHJV3qgBsxv7wB3KyEamlcDwiO8"
-              scope: openid, profile, email, offline_access
-              authorization-grant-type: authorization_code
-              redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
-          provider:
-            keycloak:
-              # change your actual keycloak host port and realm name
-              issuer-uri: ${keycloak.server-url}/realms/${keycloak.realm}
-        # In order to verify the token being sent to client
         resourceserver:
           jwt:
             issuer-uri: http://localhost:9999/realms/ecommerce_realm
+#        client:
+#          registration:
+#            keycloak:
+#              client-id: "spring-boot-app"
+#              client-secret: "bK6I3SHJV3qgBsxv7wB3KyEamlcDwiO8"
+#              scope: openid, profile, email, offline_access
+#              authorization-grant-type: authorization_code
+#              redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+#          provider:
+#            keycloak:
+#              # change your actual keycloak host port and realm name
+#              issuer-uri: ${keycloak.server-url}/realms/${keycloak.realm}
+        # In order to verify the token being sent to client
+
 
     servlet:
       multipart:
@@ -49,7 +50,7 @@ spring:
       password: ${DB_PASSWORD}
     jpa:
       hibernate:
-        ddl-auto: update    # create | update | none
+        ddl-auto: create-drop    # create | update | none
       show-sql: true          # log generated SQL
       properties:
         hibernate:
@@ -59,3 +60,5 @@ server:
 logging:
   level:
     org.springframework.security: TRACE
+    org.springframework.web: DEBUG
+    org.springframework.web.servlet.DispatcherServlet: TRACE

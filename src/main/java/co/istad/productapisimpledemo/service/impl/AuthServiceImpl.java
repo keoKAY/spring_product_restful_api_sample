@@ -8,7 +8,7 @@ import co.istad.productapisimpledemo.mapper.UserMapper;
 import co.istad.productapisimpledemo.repository.ProfileRepository;
 import co.istad.productapisimpledemo.repository.UserRepository;
 import co.istad.productapisimpledemo.service.AuthService;
-import jakarta.transaction.Transactional;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.keycloak.admin.client.Keycloak;
@@ -74,15 +74,14 @@ public class AuthServiceImpl implements AuthService {
     return null;
     }
 
-
-    @Transactional
     @Override
     public RegisterResponse register(RegisterRequest request) {
-        if(request.password().equals(request.confirmedPassword()))
+        if(!request.password().equals(request.confirmedPassword()))
                 throw new ResponseStatusException(
                         HttpStatus.BAD_REQUEST,
                         "Password doesn't much");
         var kcResponse = createUserInKeycloak("ecommerce_realm", request);
+
         try{
             User user = new User();
             user.setKeycloakId(kcResponse.id());
