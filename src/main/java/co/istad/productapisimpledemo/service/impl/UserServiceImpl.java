@@ -21,33 +21,6 @@ import java.util.List;
 public class UserServiceImpl implements UserService {
     private final UserMapper userMapper;
     private final UserRepository userRepository;
-    private final ProfileRepository profileRepository;
-    private final Keycloak keycloak;
-
-
-    public void createUserInKeycloak(String realm , String username, String email, String password ){
-        // Define the user profile
-        UserRepresentation user = new UserRepresentation();
-        user.setEnabled(true);
-        user.setUsername(username);
-        user.setEmail(email);
-        user.setEmailVerified(true);
-
-        // Define the password credentials
-        CredentialRepresentation passwordCred = new CredentialRepresentation();
-        passwordCred.setTemporary(false);
-        passwordCred.setType(CredentialRepresentation.PASSWORD);
-        passwordCred.setValue(password);
-        user.setCredentials(Collections.singletonList(passwordCred));
-
-        // send the creation request to the keycloak user
-        var response = keycloak.realm(realm).users().create(user);
-        if(response.getStatus() == 201 ){
-            System.out.println("User created successfully inside the keycloak ");
-        }else {
-            System.out.println("Failed to create the user, status code: "+response.getStatus());
-        }
-    }
 
     @Override
     public UserResponse createUser(CreateUserRequest request) {

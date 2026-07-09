@@ -5,19 +5,28 @@ package co.istad.productapisimpledemo.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.convert.converter.Converter;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
+
+import java.util.Collection;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Configuration
 @EnableWebSecurity
@@ -29,51 +38,62 @@ public class SecurityConfiguration {
         http.csrf(AbstractHttpConfigurer::disable);
         // 2. disable form login
         http.formLogin(AbstractHttpConfigurer::disable);
+
         // 3. make it become stateless for REST constraint -> not when work with oauth2
-        //http.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED));
+
+         http.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
        // http.httpBasic(Customizer.withDefaults());
 
+        //        http.oauth2Login(oauth2 ->
+        //                // this activates the automatic redirect to keycloak login form.
+        //                oauth2.defaultSuccessUrl("/home", true )
+        //        );
 
-        http.oauth2Login(oauth2 ->
-                // this activates the automatic redirect to keycloak login form.
-                oauth2.defaultSuccessUrl("/home", true ));
-        http.oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()));
+
         // endpoint to be allowed or protected
         http.authorizeHttpRequests(
                 request->
-
            request
+                   .requestMatchers("/api/v1/auth/**").permitAll()
                    // enable scalar
                    .requestMatchers("/scalar/**", "/v3/api-docs/**").permitAll()
                    .requestMatchers("/api/v1/files/**","/files/**").permitAll()
-                   .requestMatchers(HttpMethod.GET, "/api/v1/categories/**").permitAll()
+                   .requestMatchers(HttpMethod.GET,
+                           "/api/v1/categories/**").permitAll()
                    // file uploads
-
-            .requestMatchers(HttpMethod.GET, "/api/v1/products/**","/api/v1/tags/**").permitAll()
+                   .requestMatchers(HttpMethod.GET,
+                           "/api/v1/products/**",
+                           "/api/v1/tags/**").permitAll()
               // login successfully first to access it
                 .anyRequest().authenticated()
+        );
+//        http.oauth2ResourceServer(
+//                oauth2 -> oauth2.jwt(Customizer.withDefaults())
+//        );
+        http.oauth2ResourceServer(oauth2 ->
+                oauth2.jwt(jwt ->
+                        jwt.jwtAuthenticationConverter(jwtAuthenticationConverterForKeycloak())
+                )
         );
         return http.build();
     }
 
-    // Configuration for the users and role (as in-memory usage)
-    @Bean
-    public UserDetailsService userDetailsService() {
-        // user in security as known as userdetails
-        UserDetails developer =
-                User.withUsername("developer")
-                        .password(passwordEncoder().encode("developer"))
-                        .roles("USER").build();
-        return new InMemoryUserDetailsManager(developer);
-    }
 
 
-    //user login
-    // username , password
-    // passwordEncoder.verify(hashString, rawPassword)
     @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
+    public JwtAuthenticationConverter jwtAuthenticationConverterForKeycloak(){
+        Converter<Jwt, Collection<GrantedAuthority>> converter = jwt-> {
+            Map<String, Collection<String>> realmAccess = jwt.getClaim("realm_access");
+            var roles = realmAccess.get("roles");
+            return roles.stream()
+                    .map(role -> new SimpleGrantedAuthority("ROLE_"+role))
+                    .collect(Collectors.toSet());
+
+        };
+
+        var jwtAuthenticationConverter = new JwtAuthenticationConverter();
+        jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(converter);
+        return jwtAuthenticationConverter;
 
     }
 }
