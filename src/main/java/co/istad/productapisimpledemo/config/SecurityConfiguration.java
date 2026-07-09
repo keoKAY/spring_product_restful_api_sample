@@ -38,15 +38,14 @@ public class SecurityConfiguration {
     // SecurityFilterChain
     @Bean
     public SecurityFilterChain configure(HttpSecurity http) throws Exception {
-
-
         http.csrf(AbstractHttpConfigurer::disable);
         http.formLogin(AbstractHttpConfigurer::disable);
         http.cors(Customizer.withDefaults());
-
          http.sessionManagement(
                  session ->
                          session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+
+      //   http.oauth2Login(Customizer.withDefaults());
 
         http.oauth2ResourceServer(
                 oauth2 -> oauth2.jwt(Customizer.withDefaults())
@@ -69,7 +68,7 @@ public class SecurityConfiguration {
                    .requestMatchers(HttpMethod.GET,
                            "/api/v1/categories/**").permitAll()
 
-                   .requestMatchers(
+                   .requestMatchers(HttpMethod.GET,
                            "/api/v1/products/**", "/api/v1/tags",
                            "/api/v1/tags/**").permitAll()
               // login successfully first to access it

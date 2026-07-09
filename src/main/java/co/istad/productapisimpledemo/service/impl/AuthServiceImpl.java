@@ -41,6 +41,8 @@ public class AuthServiceImpl implements AuthService {
 
         user.setUsername(userRequest.username());
         user.setEmail(userRequest.email());
+        user.setFirstName(userRequest.firstName());
+        user.setLastName(userRequest.lastName());
 
         // Keycloak system data
         user.setEmailVerified(true);
@@ -117,7 +119,6 @@ public class AuthServiceImpl implements AuthService {
             user.setKeycloakId(kcResponse.id());
             user.setUsername(request.username());
             user.setEmail(request.email());
-
             Profile profile = new Profile();
             // linked profile to the user
             profile.setUser(user);
