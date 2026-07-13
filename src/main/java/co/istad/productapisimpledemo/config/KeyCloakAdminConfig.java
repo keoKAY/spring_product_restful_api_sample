@@ -5,10 +5,13 @@ import org.keycloak.OAuth2Constants;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.KeycloakBuilder;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
+// To avoid using the @values a lot
+//@ConfigurationProperties(prefix = "keycloak")
 public class KeyCloakAdminConfig {
     @Value("${keycloak.server-url}")
     private String serverUrl;

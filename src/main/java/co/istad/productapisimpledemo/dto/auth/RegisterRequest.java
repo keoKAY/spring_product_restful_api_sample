@@ -30,6 +30,9 @@ public record RegisterRequest(
     @NotNull(message = "Gender is required")
     GenderOption gender,
     String biography
+//
+//    @NotNull(message = "Role is required ")
+//    UserRole role
 ) {
 }
 

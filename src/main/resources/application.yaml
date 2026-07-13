@@ -5,8 +5,6 @@ keycloak:
     realm: ecommerce_realm
     client-secret: bK6I3SHJV3qgBsxv7wB3KyEamlcDwiO8
     client-id: spring-boot-app
-
-
 file:
     client-path: /files
     storage-location: /Users/kk/Engineering/ite-images/

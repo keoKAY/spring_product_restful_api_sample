@@ -12,9 +12,15 @@ import co.istad.productapisimpledemo.service.AuthService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jboss.resteasy.client.jaxrs.internal.ClientResponse;
+import org.keycloak.admin.client.CreatedResponseUtil;
 import org.keycloak.admin.client.Keycloak;
+import org.keycloak.admin.client.resource.UserResource;
+import org.keycloak.representations.idm.ClientRepresentation;
 import org.keycloak.representations.idm.CredentialRepresentation;
+import org.keycloak.representations.idm.RoleRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -33,9 +39,22 @@ public class AuthServiceImpl implements AuthService {
     private final UserMapper userMapper;
     private final Keycloak keycloak;
     private final UserRepository userRepository;
+    @Value("${keycloak.realm}")
+    private String realm;
 
-
-    public RegisterResponse createUserInKeycloak(String realm , RegisterRequest userRequest ){
+   // private Boolean validateClient(){}
+    // private validate the roleExists(){}
+    public ClientRepresentation getClientById(String clientId){
+        return keycloak.realm(realm)
+                .clients()
+                .findByClientId(clientId).stream()
+                .findFirst()
+                .orElseThrow(()-> new KeycloakOperationException(
+                        HttpStatus.NOT_FOUND, String.format("client with id %s not found", clientId)
+                ));
+    }
+    public RegisterResponse createUserInKeycloak(String realm ,
+                                                 RegisterRequest userRequest ){
         // Define the user profile
         UserRepresentation user = new UserRepresentation();
 
@@ -67,11 +86,40 @@ public class AuthServiceImpl implements AuthService {
            int status = response.getStatus(); // getting the status values
             log.info("Response status code: {}", response.getStatus());
             if(response.getStatus() == HttpStatus.CREATED.value()){
-                var createdUser = userResource.search(user.getUsername())
-                        .getFirst();
 
+                // update the data
+                String userId = CreatedResponseUtil.getCreatedId(response);
+                UserResource createdUser =
+                        keycloak.realm(realm).users().get(userId);
+                // instead of getting the full user
+//                var createdUser = userResource.search(user.getUsername())
+//                        .getFirst();
+
+                // ---------------- for the REALM ROLE --------------------
+                /*RoleRepresentation role = keycloak.realm(realm)
+                                .roles()
+                                 .get("CUSTOMER")
+                                 .toRepresentation();
                 log.info("Created user: {}", createdUser);
-                return userMapper.toRegisterResponse(createdUser);
+                createdUser.roles()
+                        .realmLevel()
+                        .add(List.of(role));*/
+                ClientRepresentation client = getClientById("spring-boot-app");
+                // set the default role to be CUSTOMER or SELLER
+                RoleRepresentation role = keycloak
+                        .realm(realm).clients()
+                        .get(client.getId())
+                        .roles()
+                        .get("CUSTOMER").toRepresentation();
+                // determine the role to be on the client level
+                createdUser.roles()
+                        .clientLevel(client.getId())
+                        .add(List.of(role));
+
+                return userMapper
+                        .toRegisterResponse(
+                                createdUser.toRepresentation()
+                        );
             }
         String error= "";
             try{
