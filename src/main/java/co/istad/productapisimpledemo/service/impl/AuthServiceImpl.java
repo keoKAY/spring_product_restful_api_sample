@@ -3,6 +3,7 @@ package co.istad.productapisimpledemo.service.impl;
 
 import co.istad.productapisimpledemo.dto.auth.RegisterRequest;
 import co.istad.productapisimpledemo.dto.auth.RegisterResponse;
+import co.istad.productapisimpledemo.entity.User;
 import co.istad.productapisimpledemo.mapper.UserMapper;
 import co.istad.productapisimpledemo.repository.UserRepository;
 import co.istad.productapisimpledemo.service.AuthService;
@@ -54,6 +55,7 @@ public class AuthServiceImpl implements AuthService {
 
        // emailVerified , enableAccount
         userRepresentation.setEnabled(true);
+        // TODO: ask user to verify mail
         userRepresentation.setEmailVerified(true); // temporary
 
         // customize more info of the user in keycloak (optional)
@@ -64,6 +66,7 @@ public class AuthServiceImpl implements AuthService {
 
         userRepresentation.setAttributes(attributes);
 
+
         // credential -> password
         var cred = new CredentialRepresentation();
         cred.setTemporary(false); // no need to change the password when first login
@@ -72,7 +75,7 @@ public class AuthServiceImpl implements AuthService {
        // setting the password for this new user
         userRepresentation.setCredentials(List.of(cred));
 
-
+        // creating the new object in kc
         var resourceResource = keycloak.realm(realm).users();
         try(var response = resourceResource.create(userRepresentation)){
             // confirm if the user is created  , we will configure more
@@ -81,31 +84,49 @@ public class AuthServiceImpl implements AuthService {
                 // all register use will be in CUSTOMER ROLE
                String userId = CreatedResponseUtil.getCreatedId(response);
                UserResource userResource = keycloak.realm(realm).users().get(userId);
-
-
                // assign the ROLE for the user in keycloak
                 var client = getClientById(clientId);
                 // create role representation ( role inside keycloak)
                 var roleRepresentation = keycloak.realm(realm)
                         .clients().get(client.getId())
                         .roles().get("CUSTOMER").toRepresentation();
-
                 // add role to the keycloak user
                 userResource.roles()
                         .clientLevel(client.getId())
                         .add(List.of(roleRepresentation));
 
                 return userMapper.toRegisterResponse(userRepresentation);
+            }else {
+                throw new RuntimeException("Error creating user in keycloak");
             }
+            //
         }catch(Exception ex){
             ex.printStackTrace();
             log.error("Error creating user in keycloak", ex);
+            throw new RuntimeException("Error creating user in keycloak");
         }
-        return null;
+        //return null;
     }
 
     @Override
     public RegisterResponse register(RegisterRequest request) {
-        return null;
+
+        // ensure that password matches
+        if(!request.password().equals(request.confirmedPassword())) {
+            throw new RuntimeException("Passwords don't match");
+        }
+        var kcResponse= createUserInKeycloak(request);
+        User user = new User();
+        user.setKeycloakUserId(kcResponse.id());
+        user.setEmail(kcResponse.email());
+        user.setUsername(kcResponse.username());
+
+        // user -> profile
+        // if you have profile , you will need to create profile
+        // user.setProfile()
+
+        userRepository.save(user);
+        return kcResponse;
+
     }
 }

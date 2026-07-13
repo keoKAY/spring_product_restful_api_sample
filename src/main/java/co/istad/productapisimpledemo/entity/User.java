@@ -17,6 +17,7 @@ public class User {
     private Integer id;
     private String email;
     private String password;
+    private String username;
     // must include this
     private String keycloakUserId;
 
