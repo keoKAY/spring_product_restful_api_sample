@@ -32,6 +32,10 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
     runtimeOnly 'org.postgresql:postgresql'
 
+
+    implementation 'org.springframework.boot:spring-boot-starter-security-oauth2-resource-server'
+    implementation 'org.keycloak:keycloak-admin-client:23.0.7'
+    implementation 'org.keycloak:keycloak-core:23.0.7'
     // mapstruct
     // Source: https://mvnrepository.com/artifact/org.mapstruct/mapstruct
    // implementation 'org.mapstruct:mapstruct:1.7.0.Beta1'

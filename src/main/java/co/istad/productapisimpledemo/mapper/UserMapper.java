@@ -1,8 +1,11 @@
 package co.istad.productapisimpledemo.mapper;
 
+import co.istad.productapisimpledemo.dto.auth.RegisterRequest;
+import co.istad.productapisimpledemo.dto.auth.RegisterResponse;
 import co.istad.productapisimpledemo.dto.user.CreateUserRequest;
 import co.istad.productapisimpledemo.dto.user.UserResponse;
 import co.istad.productapisimpledemo.entity.User;
+import org.keycloak.representations.idm.UserRepresentation;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
@@ -13,4 +16,9 @@ public interface UserMapper {
     @Mapping(target="bio", source = "profile.bio")
     UserResponse toUserResponse(User user);
     User toUser(CreateUserRequest request);
+
+
+
+    // for register
+    RegisterResponse toRegisterResponse(UserRepresentation user);
 }

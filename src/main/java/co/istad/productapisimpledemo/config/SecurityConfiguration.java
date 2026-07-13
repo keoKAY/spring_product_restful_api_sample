@@ -31,7 +31,11 @@ public class SecurityConfiguration {
         http.formLogin(AbstractHttpConfigurer::disable);
         // 3. make it become stateless for REST constraint
         http.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
-        http.httpBasic(Customizer.withDefaults());
+
+        // to be able to work with keycloak authorization server
+        http.oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()));
+
+        //http.httpBasic(Customizer.withDefaults());
         // endpoint to be allowed or protected
         http.authorizeHttpRequests(
                 request->
