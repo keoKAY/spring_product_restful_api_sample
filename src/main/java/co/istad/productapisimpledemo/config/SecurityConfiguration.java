@@ -42,6 +42,7 @@ public class SecurityConfiguration {
 
            request
                    // enable scalar
+                   .requestMatchers("/api/v1/auth/register").permitAll()
                    .requestMatchers("/scalar/**", "/v3/api-docs/**").permitAll()
                    .requestMatchers("/api/v1/files/**","/files/**").permitAll()
                    .requestMatchers(HttpMethod.GET, "/api/v1/categories/**").permitAll()
