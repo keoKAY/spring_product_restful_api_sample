@@ -82,15 +82,18 @@ public class AuthServiceImpl implements AuthService {
 
         // send the creation request to the keycloak user
         var userResource  = keycloak.realm(realm).users();
+        String createdUserId = null;
+
        try(var response = userResource.create(user)){
-           int status = response.getStatus(); // getting the status values
+            int status = response.getStatus(); // getting the status values
             log.info("Response status code: {}", response.getStatus());
+
             if(response.getStatus() == HttpStatus.CREATED.value()){
 
                 // update the data
-                String userId = CreatedResponseUtil.getCreatedId(response);
-                UserResource createdUser =
-                        keycloak.realm(realm).users().get(userId);
+                createdUserId = CreatedResponseUtil.getCreatedId(response);
+//                UserResource createdUser =
+//                        keycloak.realm(realm).users().get(userId);
                 // instead of getting the full user
 //                var createdUser = userResource.search(user.getUsername())
 //                        .getFirst();
@@ -104,6 +107,7 @@ public class AuthServiceImpl implements AuthService {
                 createdUser.roles()
                         .realmLevel()
                         .add(List.of(role));*/
+
                 ClientRepresentation client = getClientById("spring-boot-app");
                 // set the default role to be CUSTOMER or SELLER
                 RoleRepresentation role = keycloak
@@ -112,33 +116,29 @@ public class AuthServiceImpl implements AuthService {
                         .roles()
                         .get("CUSTOMER").toRepresentation();
                 // determine the role to be on the client level
+                UserResource createdUser = userResource.get(createdUserId);
                 createdUser.roles()
                         .clientLevel(client.getId())
                         .add(List.of(role));
 
                 return userMapper
                         .toRegisterResponse(
-                                createdUser.toRepresentation()
+                               createdUser.toRepresentation()
                         );
             }
-        String error= "";
+
+            String error= "";
             try{
                 error = response.readEntity(String.class);
             }catch(Exception ignored){}
 
            switch(status){
-            case 409 -> throw new KeycloakOperationException(
-                    HttpStatus.CONFLICT,
-                    "Username or email already exists "
+            case 409 -> throw new KeycloakOperationException(HttpStatus.CONFLICT, "Username or email already exists "
             );
-            case 400 -> throw new KeycloakOperationException(
-                    HttpStatus.BAD_REQUEST,
-                    error
+            case 400 -> throw new KeycloakOperationException(HttpStatus.BAD_REQUEST, error
             );
             default ->
-                throw new KeycloakOperationException(
-                        HttpStatus.INTERNAL_SERVER_ERROR,
-                        "Failed to create the user in keycloak "
+                throw new KeycloakOperationException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to create the user in keycloak "
                 );
 
            }
@@ -146,6 +146,11 @@ public class AuthServiceImpl implements AuthService {
            throw ex ;
        }catch (Exception ex ){
            log.error("Keycloak error : ", ex );
+
+           // something goes wrong, it will delete the user
+           if(createdUserId != null){
+               deleteUserFromKeycloak(realm, createdUserId);
+           }
            throw new KeycloakOperationException(
                    HttpStatus.INTERNAL_SERVER_ERROR,
                    "Unable to communicate with keycloak"
@@ -153,7 +158,6 @@ public class AuthServiceImpl implements AuthService {
        }
 
     }
-
     @Override
     public RegisterResponse register(RegisterRequest request) {
         if(!request.password().equals(request.confirmedPassword()))
@@ -161,7 +165,6 @@ public class AuthServiceImpl implements AuthService {
                         HttpStatus.BAD_REQUEST,
                         "Password doesn't much");
         var kcResponse = createUserInKeycloak("ecommerce_realm", request);
-
         try{
             User user = new User();
             user.setKeycloakId(kcResponse.id());
@@ -171,10 +174,9 @@ public class AuthServiceImpl implements AuthService {
             // linked profile to the user
             profile.setUser(user);
             user.setProfile(profile);
-
-
             userRepository.save(user);
             return kcResponse;
+
         }catch(Exception ex){
             deleteUserFromKeycloak("ecommerce_realm", kcResponse.id());
             throw ex;
@@ -183,7 +185,6 @@ public class AuthServiceImpl implements AuthService {
     }
 
     private void deleteUserFromKeycloak(String realm, String keycloakId) {
-
         try {
             keycloak.realm(realm)
                     .users()

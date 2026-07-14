@@ -125,11 +125,26 @@ public class SecurityConfiguration {
             }
 
             // 2. Access your specific client configuration map (e.g., "spring-boot-app")
-            Map<String, Object> clientAccess = (Map<String, Object>) resourceAccess.get("spring-boot-app");
+           /* "resource_access": {
+                "spring-boot-app": {
+                    "roles": [
+                    "CUSTOMER"
+      ]
+                },
+                "account": {
+                    "roles": [
+                    "manage-account",
+                            "manage-account-links",
+                            "view-profile"
+      ]
+                }*/
+//            Map<String, Object> clientAccess = (Map<String, Object>) resourceAccess.get("spring-boot-app");
+//
+
+            var clientAccess = (Map<String, Object>) resourceAccess.get("spring-boot-app");
             if (clientAccess == null) {
                 return Collections.emptySet();
             }
-
             // 3. Extract the list of roles assigned to this client
             Object rolesObj = clientAccess.get("roles");
             if (!(rolesObj instanceof Collection<?> roles)) {
