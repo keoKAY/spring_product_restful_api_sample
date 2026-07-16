@@ -103,7 +103,6 @@ public class AuthServiceImpl implements AuthService {
                 log.info("Sending email verification to user: {}",userRepresentation.getEmail());
                 userResource.sendVerifyEmail();
 
-                // --------------<<BUG FOUND>> ! -> set the id
                 userRepresentation.setId(userId);// keycloak id
                 return userRepresentation;
                 //return userMapper.toRegisterResponse(userRepresentation);
@@ -148,4 +147,8 @@ public class AuthServiceImpl implements AuthService {
         return userMapper.toRegisterResponse(createdUser);
 
     }
+
+    // TODO:
+    // update the user profile
+    // only the profile owner able to update their profile
 }
