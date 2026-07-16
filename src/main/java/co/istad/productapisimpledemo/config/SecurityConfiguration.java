@@ -62,8 +62,8 @@ public class SecurityConfiguration {
                    // 1. ALWAYS permit OPTIONS for CORS pre-flights (crucial for frontend clients)
                    .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                    .requestMatchers(
-                           "/api/v1/authenticate",
-                           "/api/v1/authenticate/**","/error").permitAll()
+                           "/api/v1/auth",
+                           "/api/v1/auth/**","/error").permitAll()
                    .requestMatchers(
                            "/scalar/**",
                            "/v3/api-docs/**").permitAll()

@@ -21,6 +21,7 @@ public class User {
     private String email;
     @Column(nullable = false, unique = true)
     private String username;
+
     // might not need to store the password since keycloak manage the pass
     //private String password;
     @Column(nullable = false, unique = true)

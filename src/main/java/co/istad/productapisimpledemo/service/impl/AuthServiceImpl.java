@@ -3,6 +3,8 @@ package co.istad.productapisimpledemo.service.impl;
 import co.istad.productapisimpledemo.advisor.KeycloakOperationException;
 import co.istad.productapisimpledemo.dto.auth.RegisterRequest;
 import co.istad.productapisimpledemo.dto.auth.RegisterResponse;
+import co.istad.productapisimpledemo.dto.auth.UpdateUserRequest;
+import co.istad.productapisimpledemo.dto.user.UserResponse;
 import co.istad.productapisimpledemo.entity.Profile;
 import co.istad.productapisimpledemo.entity.User;
 import co.istad.productapisimpledemo.mapper.UserMapper;
@@ -10,6 +12,8 @@ import co.istad.productapisimpledemo.repository.ProfileRepository;
 import co.istad.productapisimpledemo.repository.UserRepository;
 import co.istad.productapisimpledemo.service.AuthService;
 
+import jakarta.transaction.Transactional;
+import jakarta.ws.rs.WebApplicationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jboss.resteasy.client.jaxrs.internal.ClientResponse;
@@ -25,10 +29,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 
 @Slf4j
@@ -63,9 +64,14 @@ public class AuthServiceImpl implements AuthService {
         user.setFirstName(userRequest.firstName());
         user.setLastName(userRequest.lastName());
 
-        // Keycloak system data
-        user.setEmailVerified(true);
+        // DEV-ONLY: Keycloak system data
+//        user.setEmailVerified(true);
+//        user.setEnabled(true);
+
+        // PROD-APPROACH
         user.setEnabled(true);
+        user.setEmailVerified(false );
+        user.setRequiredActions(List.of("VERIFY_EMAIL"));
 
         // customize the attributes
         Map<String, List<String>> attributes = new HashMap<>();
@@ -117,9 +123,15 @@ public class AuthServiceImpl implements AuthService {
                         .get("CUSTOMER").toRepresentation();
                 // determine the role to be on the client level
                 UserResource createdUser = userResource.get(createdUserId);
+                // force keycloak to send the email immediately
+               // createdUser.executeActionsEmail(List.of("VERIFY_EMAIL"))
+
                 createdUser.roles()
                         .clientLevel(client.getId())
                         .add(List.of(role));
+                // sending email after created the user
+                log.info("Sending the verification email by keycloak");
+                createdUser.sendVerifyEmail();
 
                 return userMapper
                         .toRegisterResponse(
@@ -142,7 +154,12 @@ public class AuthServiceImpl implements AuthService {
                 );
 
            }
-       }catch(KeycloakOperationException ex ){
+       } catch (WebApplicationException e) {
+           String keycloakErrorResponseBody = e.getResponse().readEntity(String.class);
+           log.error("Keycloak executeActionsEmail failed. Raw body text: {}", keycloakErrorResponseBody);
+           throw new RuntimeException("Keycloak Email Action Failure: " + keycloakErrorResponseBody, e);
+       }
+        catch(KeycloakOperationException ex ){
            throw ex ;
        }catch (Exception ex ){
            log.error("Keycloak error : ", ex );
@@ -158,6 +175,8 @@ public class AuthServiceImpl implements AuthService {
        }
 
     }
+
+    @Transactional // Ensure the Spring DB transaction roll back if the DB operations failed
     @Override
     public RegisterResponse register(RegisterRequest request) {
         if(!request.password().equals(request.confirmedPassword()))
@@ -174,7 +193,11 @@ public class AuthServiceImpl implements AuthService {
             // linked profile to the user
             profile.setUser(user);
             user.setProfile(profile);
-            userRepository.save(user);
+
+            // 2. Critical: use saveAndFlush to execute SQL statements immediately.
+            // this forces any database level constraint violates to throw inside this block
+           // userRepository.save(user);
+            userRepository.saveAndFlush(user);
             return kcResponse;
 
         }catch(Exception ex){
@@ -183,6 +206,8 @@ public class AuthServiceImpl implements AuthService {
         }
        // return null;
     }
+
+
 
     private void deleteUserFromKeycloak(String realm, String keycloakId) {
         try {
@@ -195,8 +220,74 @@ public class AuthServiceImpl implements AuthService {
 
         } catch (Exception e) {
 
-            log.error("Failed to rollback Keycloak user {}", keycloakId, e);
+            log.error("CRITICAL CRASH: Failed to rollback Keycloak user: {}", keycloakId, e);
 
         }
+    }
+
+
+
+    @Override
+    @Transactional
+    // int id = user id (spring user id ) should be using uuid though for better approach
+    public UserResponse updateUser(String keycloakId , UpdateUserRequest request ){
+        log.info("Update user: {}", keycloakId);
+        User user = userRepository.findUserByKeycloakId(keycloakId)
+                                    .orElseThrow(()-> new NoSuchElementException("User not found"));
+       var profile = user.getProfile();
+        // update the local database fields
+        if(request.gender()!= null ) profile.setGender(request.gender());
+        if(request.biography()!=null ) profile.setBio(request.biography());
+        if(request.firstName()!= null) profile.setFirstName(request.firstName());
+        if(request.lastName()!= null) profile.setLastName(request.lastName());
+
+        user.setProfile(profile); // perform the partial updates
+        var updatedUser = userRepository.save(user);
+
+        // UPDATE: the user  from keycloak side
+       try {
+           var kcResource = keycloak.realm(realm)
+                   .users()
+                   .get(user.getKeycloakId());
+           var kcUser = kcResource.toRepresentation();
+           // prevent keycloak misunderstood us trying to change the username
+           kcUser.setUsername(kcUser.getUsername());
+           // updated the fields inside the keycloak
+           if(request.firstName()!=null) kcUser.setFirstName(request.firstName());
+           if(request.lastName()!=null) kcUser.setLastName(request.lastName());
+
+           Map<String, List<String>> attributes = kcUser.getAttributes() != null
+                   ? new HashMap<>(kcUser.getAttributes())
+                   : new HashMap<>();
+
+           if (request.gender() != null) {
+               attributes.put("gender", List.of(request.gender()));
+           }
+           if (request.biography() != null) {
+               attributes.put("biography", List.of(request.biography()));
+           }
+           // add the attributes
+           kcUser.setAttributes(attributes);
+           // Will call to the KC api in order to udpate the data
+           kcResource.update(kcUser);
+       } catch (WebApplicationException e) {
+           e.printStackTrace();
+           String keycloakErrorBody = e.getResponse().readEntity(String.class);
+           log.error("Keycloak 400 Bad Request Reason: {}", keycloakErrorBody);
+
+           throw new KeycloakOperationException(
+                   HttpStatus.BAD_REQUEST,
+                   "Keycloak validation failed: " + keycloakErrorBody);
+//           throw new KeycloakOperationException(
+//                   HttpStatus.INTERNAL_SERVER_ERROR,
+//                   "Failed to update user, Transaction Rollback. ");
+       }catch (Exception e) {
+           log.error("Generic exception during Keycloak sync", e);
+           throw new KeycloakOperationException(
+                   HttpStatus.INTERNAL_SERVER_ERROR,
+                   "Failed to update user, Transaction Rollback.");
+       }
+
+        return userMapper.toUserResponse(updatedUser);
     }
 }

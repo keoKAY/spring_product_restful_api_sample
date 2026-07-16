@@ -14,6 +14,8 @@ public interface UserMapper {
 
     @Mapping(target = "profileUrl", source = "profile.profileUrl")
     @Mapping(target="bio", source = "profile.bio")
+    @Mapping(target="firstName", source = "profile.firstName")
+    @Mapping(target = "lastName", source = "profile.lastName")
     UserResponse toUserResponse(User user);
     User toUser(CreateUserRequest request);
 
