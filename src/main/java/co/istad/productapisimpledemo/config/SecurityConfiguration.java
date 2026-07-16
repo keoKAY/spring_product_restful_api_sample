@@ -53,9 +53,10 @@ public class SecurityConfiguration {
         // endpoint to be allowed or protected
         http.authorizeHttpRequests(
                 request->
-
            request
                    // enable scalar
+                   .requestMatchers("/api/v1/admin","/api/v1/admin/**").hasRole("ADMIN")
+
                    .requestMatchers("/api/v1/auth/register").permitAll()
                    .requestMatchers("/scalar/**", "/v3/api-docs/**").permitAll()
                    .requestMatchers("/api/v1/files/**","/files/**").permitAll()
@@ -74,6 +75,7 @@ public class SecurityConfiguration {
     // granted-authority: role -> what can authenticated user can do
 
     @Bean
+    @SuppressWarnings("unchecked")
     public JwtAuthenticationConverter jwtAuthenticationConverter() {
         // 1. created a converter object
         Converter<Jwt, Collection<GrantedAuthority>> converter = jwt -> {

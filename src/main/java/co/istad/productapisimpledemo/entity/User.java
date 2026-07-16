@@ -19,8 +19,10 @@ public class User {
     private String password;
     private String username;
     // must include this
-    private String keycloakUserId;
+    //private String keycloakUserId;
 
+    @Column(unique = true, nullable = false)
+    private String keycloakId;
     @OneToOne(mappedBy ="user", cascade = CascadeType.ALL)
     private Profile profile;
 }

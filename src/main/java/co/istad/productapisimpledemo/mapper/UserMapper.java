@@ -21,4 +21,11 @@ public interface UserMapper {
 
     // for register
     RegisterResponse toRegisterResponse(UserRepresentation user);
+
+    // entity to registerResponse
+    @Mapping(target = "firstName", source = "profile.firstName")
+    @Mapping(target ="lastName", source = "profile.lastName")
+    @Mapping(target = "biography" , source="profile.bio")
+    @Mapping(target = "gender", source = "profile.gender")
+    RegisterResponse toRegisterResponse(User user);
 }

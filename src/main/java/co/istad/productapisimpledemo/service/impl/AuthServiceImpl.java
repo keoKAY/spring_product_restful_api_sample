@@ -3,8 +3,11 @@ package co.istad.productapisimpledemo.service.impl;
 
 import co.istad.productapisimpledemo.dto.auth.RegisterRequest;
 import co.istad.productapisimpledemo.dto.auth.RegisterResponse;
+import co.istad.productapisimpledemo.dto.user.UserResponse;
+import co.istad.productapisimpledemo.entity.Profile;
 import co.istad.productapisimpledemo.entity.User;
 import co.istad.productapisimpledemo.mapper.UserMapper;
+import co.istad.productapisimpledemo.repository.ProfileRepository;
 import co.istad.productapisimpledemo.repository.UserRepository;
 import co.istad.productapisimpledemo.service.AuthService;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +32,7 @@ import java.util.NoSuchElementException;
 @Slf4j
 public class AuthServiceImpl implements AuthService {
     private final UserRepository userRepository;
+    private final ProfileRepository profileRepository;
     // client used to create , manage the user in KC
     private final Keycloak keycloak;
     private final UserMapper userMapper;
@@ -45,7 +49,7 @@ public class AuthServiceImpl implements AuthService {
                         () -> new NoSuchElementException("No client with id " + clientId)
                 );
     }
-    private RegisterResponse createUserInKeycloak( RegisterRequest request) {
+    private UserRepresentation createUserInKeycloak( RegisterRequest request) {
        // 1. user representation -> store basic information (idm)
        var userRepresentation = new UserRepresentation();
        userRepresentation.setUsername(request.username());
@@ -55,8 +59,8 @@ public class AuthServiceImpl implements AuthService {
 
        // emailVerified , enableAccount
         userRepresentation.setEnabled(true);
-        // TODO: ask user to verify mail
-        userRepresentation.setEmailVerified(true); // temporary
+        userRepresentation.setEmailVerified(false); // temporary
+        userRepresentation.setRequiredActions(List.of("VERIFY_EMAIL"));
 
         // customize more info of the user in keycloak (optional)
         // you will need to create this inside your keycloak as well
@@ -92,14 +96,17 @@ public class AuthServiceImpl implements AuthService {
                         .clients().get(client.getId())
                         .roles().get("CUSTOMER").toRepresentation();
 
-
-
                 // add role to the keycloak user
                 userResource.roles()
                         .clientLevel(client.getId())
                         .add(List.of(roleRepresentation));
+                log.info("Sending email verification to user: {}",userRepresentation.getEmail());
+                userResource.sendVerifyEmail();
 
-                return userMapper.toRegisterResponse(userRepresentation);
+                // --------------<<BUG FOUND>> ! -> set the id
+                userRepresentation.setId(userId);// keycloak id
+                return userRepresentation;
+                //return userMapper.toRegisterResponse(userRepresentation);
             }else {
                 throw new RuntimeException("Error creating user in keycloak");
             }
@@ -121,16 +128,24 @@ public class AuthServiceImpl implements AuthService {
         }
         var kcResponse= createUserInKeycloak(request);
         User user = new User();
-        user.setKeycloakUserId(kcResponse.id());
-        user.setEmail(kcResponse.email());
-        user.setUsername(kcResponse.username());
+        // kcResponse.id() -> normal id not keycloak id
+        log.info("Value of KC ID : {}", kcResponse.getId());
 
-        // user -> profile
-        // if you have profile , you will need to create profile
-        // user.setProfile()
+        user.setKeycloakId(kcResponse.getId());
+        user.setEmail(kcResponse.getEmail());
+        user.setUsername(kcResponse.getUsername());
 
-        userRepository.save(user);
-        return kcResponse;
+        Profile profile = new Profile();
+        profile.setFirstName(kcResponse.getFirstName());
+        profile.setLastName(kcResponse.getLastName());
+        profile.setGender(request.gender());
+        profile.setBio(request.biography());
+        profile.setUser(user);
+
+       // profile.setProfileUrl(request.profileUrl);
+        user.setProfile(profile);
+        var createdUser = userRepository.save(user);
+        return userMapper.toRegisterResponse(createdUser);
 
     }
 }
