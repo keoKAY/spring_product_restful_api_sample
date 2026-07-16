@@ -61,7 +61,7 @@ public class AuthServiceImpl implements AuthService {
         // customize more info of the user in keycloak (optional)
         // you will need to create this inside your keycloak as well
         Map<String, List<String>> attributes = new HashMap<>();
-        attributes.put("email", List.of(request.email()));
+        attributes.put("gender", List.of(request.gender()));
         attributes.put("biography", List.of(request.biography()));
 
         userRepresentation.setAttributes(attributes);
@@ -86,10 +86,14 @@ public class AuthServiceImpl implements AuthService {
                UserResource userResource = keycloak.realm(realm).users().get(userId);
                // assign the ROLE for the user in keycloak
                 var client = getClientById(clientId);
+
                 // create role representation ( role inside keycloak)
                 var roleRepresentation = keycloak.realm(realm)
                         .clients().get(client.getId())
                         .roles().get("CUSTOMER").toRepresentation();
+
+
+
                 // add role to the keycloak user
                 userResource.roles()
                         .clientLevel(client.getId())

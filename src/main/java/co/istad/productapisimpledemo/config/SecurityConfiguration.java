@@ -2,26 +2,40 @@ package co.istad.productapisimpledemo.config;
 
 
 // Write the code to determine/config the security of spring
-
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.convert.converter.Converter;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 public class SecurityConfiguration {
+    @Value("${keycloak.client-id}")
+    private String clientId;
     // SecurityFilterChain
     @Bean
     public SecurityFilterChain configure(HttpSecurity http) throws Exception {
@@ -55,24 +69,47 @@ public class SecurityConfiguration {
         return http.build();
     }
 
-    // Configuration for the users and role (as in-memory usage)
+
+    // USAGE: convert jwt to security object in spring
+    // granted-authority: role -> what can authenticated user can do
+
     @Bean
-    public UserDetailsService userDetailsService() {
-        // user in security as known as userdetails
-        UserDetails developer =
-                User.withUsername("developer")
-                        .password(passwordEncoder().encode("developer"))
-                        .roles("USER").build();
-        return new InMemoryUserDetailsManager(developer);
+    public JwtAuthenticationConverter jwtAuthenticationConverter() {
+        // 1. created a converter object
+        Converter<Jwt, Collection<GrantedAuthority>> converter = jwt -> {
+            // 1. get  List of granted-authories
+            // get claim from resource_access
+//            "resource_access": {
+//                "spring-boot-app": {
+//                    "roles": [
+//                    "CUSTOMER"
+//      ]
+//                }
+            Map<String, Object> resourceAccess = jwt.getClaim("resource_access");
+            if(resourceAccess == null) { return Collections.emptySet(); }
+            var clientAccess = (Map<String, Object>) resourceAccess.get(clientId); // get role from spring-boot-app = client id
+            if(clientAccess == null) { return Collections.emptySet(); }
+            // get role object
+            Object rolesObj = clientAccess.get("roles");
+
+            // check the type of the role
+            // if it's a collection , we can use it with stream
+            if (!(rolesObj instanceof Collection<?> roles)) {
+                return Collections.emptySet();
+            }
+            // CUSTOMER, SELLER -> ROLE_CUSTOMER, ROLE_SELLER
+            return roles.stream()
+                    .map(Object::toString)
+                    .map(role -> new SimpleGrantedAuthority("ROLE_"+role))
+                    .collect(Collectors.toSet());
+        };
+
+        var jwtAuthenticationConverter = new JwtAuthenticationConverter();
+        jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(converter );
+
+        return jwtAuthenticationConverter;
     }
 
+    // TODO: configure cors for allowing specific client to access
 
-    //user login
-    // username , password
-    // passwordEncoder.verify(hashString, rawPassword)
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-
-    }
 }
