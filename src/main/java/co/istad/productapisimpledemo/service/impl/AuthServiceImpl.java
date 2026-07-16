@@ -290,4 +290,32 @@ public class AuthServiceImpl implements AuthService {
 
         return userMapper.toUserResponse(updatedUser);
     }
+
+
+    @Transactional
+    public void promoteCustomerToSeller(String keycloakId){
+        var user = userRepository.findUserByKeycloakId(keycloakId)
+                .orElseThrow(()-> new NoSuchElementException("User not found"));
+
+        // if we store the role inside our database
+        try{
+            var userResource = keycloak.realm(realm).users().get(user.getKeycloakId());
+            ClientRepresentation client = getClientById("spring-boot-app");
+            // set the default role to be CUSTOMER or SELLER
+            var  clientRoleResource = keycloak
+                    .realm(realm).clients()
+                    .get(client.getId())
+                    .roles();
+            RoleRepresentation customerRole = clientRoleResource.get("CUSTOMER").toRepresentation();
+            RoleRepresentation sellerRole = clientRoleResource.get("SELLER").toRepresentation();
+
+            userResource.roles().clientLevel(client.getId()).remove(List.of(customerRole));
+            userResource.roles().clientLevel(client.getId()).add(List.of(sellerRole));
+
+            log.info("Successfully promote customer to Seller");
+        }catch(Exception ex){
+            log.error("Rollback: Failed to rollback Keycloak user: {}", keycloakId, ex);
+            throw new KeycloakOperationException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to promote the user ");
+        }
+    }
 }
