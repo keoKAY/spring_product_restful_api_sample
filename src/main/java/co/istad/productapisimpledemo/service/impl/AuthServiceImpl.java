@@ -3,6 +3,7 @@ package co.istad.productapisimpledemo.service.impl;
 
 import co.istad.productapisimpledemo.dto.auth.RegisterRequest;
 import co.istad.productapisimpledemo.dto.auth.RegisterResponse;
+import co.istad.productapisimpledemo.dto.auth.UserUpdateRequest;
 import co.istad.productapisimpledemo.dto.user.UserResponse;
 import co.istad.productapisimpledemo.entity.Profile;
 import co.istad.productapisimpledemo.entity.User;
@@ -151,4 +152,82 @@ public class AuthServiceImpl implements AuthService {
     // TODO:
     // update the user profile
     // only the profile owner able to update their profile
+    // Date: 17-July-2026
+    public UserResponse updateUser(String keycloakId, UserUpdateRequest request){
+        // 1. update the spring side first
+        var oldUser = userRepository.findByKeycloakId(keycloakId)
+                .orElseThrow(()-> new NoSuchElementException("User with id " + keycloakId + " not found"));
+        var oldProfile = oldUser.getProfile();
+        if(request.firstName()!=null)
+                oldProfile.setFirstName(request.firstName());
+        if(request.lastName()!=null)
+                oldProfile.setLastName(request.lastName());
+        if(request.gender()!=null)
+                oldProfile.setGender(request.gender());
+        if(request.biography()!=null)
+                oldProfile.setBio(request.biography());
+        oldUser.setProfile(oldProfile);
+        // update the new data into spring database
+        var updatedUser = userRepository.save(oldUser);
+
+        // 2. update the keycloak side
+        try{
+            var userResource = keycloak
+                                .realm(realm)
+                                .users().get(keycloakId);
+            // to change / update kc user information
+            var userRep = userResource.toRepresentation();
+            if(request.firstName()!=null)
+                userRep.setFirstName(request.firstName());
+            if(request.lastName()!=null)
+                userRep.setLastName(request.lastName());
+
+            // gender , biography
+            Map<String, List<String>> attributes = (userRep.getAttributes()!=null ?
+                    new HashMap<>(userRep.getAttributes())
+                    : new HashMap<>());
+           if(request.gender()!=null)
+                attributes.put("gender", List.of(request.gender()));
+           if(request.biography()!=null)
+                attributes.put("biography", List.of(request.biography()));
+           // update the attribute
+           userRep.setAttributes(attributes);
+           userResource.update(userRep); // update the whole kc user
+            return userMapper.toUserResponse(updatedUser);
+        }catch(Exception ex){
+            ex.printStackTrace();
+            log.error("Error saving user in keycloak", ex);
+            throw new RuntimeException("Error saving user in keycloak");
+        }
+
+
+    }
+
+    // forgot-password
+    public void forgotPassword(String email){
+        try{
+
+            var listUserRepresentation = keycloak
+                    .realm(realm)
+                    .users()
+                    .searchByEmail(email, true );
+            // exact = true , exact match
+            if(listUserRepresentation.isEmpty()){
+                log.warn("Sending reset password to no-existent user with email {}", email);
+                return ;
+            }
+
+            var kcUserId = listUserRepresentation.getFirst().getId();
+            var userResource = keycloak.realm(realm).users().get(kcUserId);
+
+            log.info("Sending reset password to user with id {}",kcUserId);
+            userResource.executeActionsEmail(List.of("UPDATE_PASSWORD"));
+
+        }catch(Exception ex){
+            // TODO: handle better exception !
+            ex.printStackTrace();
+            log.error("Error saving user in keycloak", ex);
+            throw new RuntimeException("Error saving user in keycloak");
+        }
+    }
 }

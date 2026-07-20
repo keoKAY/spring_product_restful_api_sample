@@ -56,8 +56,7 @@ public class SecurityConfiguration {
            request
                    // enable scalar
                    .requestMatchers("/api/v1/admin","/api/v1/admin/**").hasRole("ADMIN")
-
-                   .requestMatchers("/api/v1/auth/register").permitAll()
+                   .requestMatchers("/api/v1/auth/register", "/api/v1/test/forgot-password/**").permitAll()
                    .requestMatchers("/scalar/**", "/v3/api-docs/**").permitAll()
                    .requestMatchers("/api/v1/files/**","/files/**").permitAll()
                    .requestMatchers(HttpMethod.GET, "/api/v1/categories/**").permitAll()
@@ -102,13 +101,15 @@ public class SecurityConfiguration {
             // CUSTOMER, SELLER -> ROLE_CUSTOMER, ROLE_SELLER
             return roles.stream()
                     .map(Object::toString)
-                    .map(role -> new SimpleGrantedAuthority("ROLE_"+role))
+                    .map(role -> {
+                        if(role.contains(":")) { return new SimpleGrantedAuthority(role); }
+                        return new SimpleGrantedAuthority("ROLE_"+role);
+                    })
                     .collect(Collectors.toSet());
         };
 
         var jwtAuthenticationConverter = new JwtAuthenticationConverter();
         jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(converter );
-
         return jwtAuthenticationConverter;
     }
 

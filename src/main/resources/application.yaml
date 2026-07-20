@@ -34,7 +34,7 @@ spring:
       password: ${DB_PASSWORD}
     jpa:
       hibernate:
-        ddl-auto:  create-drop #update    # create | update | none
+        ddl-auto:  update #  create-drop #update    # create | update | none
       show-sql: true          # log generated SQL
       properties:
         hibernate:
