@@ -7,8 +7,7 @@ plugins {
     id 'org.sonarqube' version '4.4.1.3373'
     id 'jacoco'
 
-    // auto inject the production env when run the spring
-    id 'io.github.dsdolzhenko.dotenv' version '0.1.0'
+
 }
 
 group = 'co.istad'
@@ -39,6 +38,13 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
     runtimeOnly 'org.postgresql:postgresql'
 
+    // auto load the env for the spring boot
+    // 1. Import the BOM to manage versions automatically
+    implementation platform('me.paulschwarz:spring-dotenv-bom:5.1.0')
+
+    // 2. Add the specific module for Spring Boot 4.x
+    // Using developmentOnly ensures it won't break your CI/CD pipelines
+    developmentOnly 'me.paulschwarz:springboot4-dotenv'
 
     implementation 'org.springframework.boot:spring-boot-starter-security-oauth2-resource-server'
     implementation 'org.keycloak:keycloak-admin-client:23.0.7'
