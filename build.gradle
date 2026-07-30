@@ -44,7 +44,8 @@ dependencies {
 
     // 2. Add the specific module for Spring Boot 4.x
     // Using developmentOnly ensures it won't break your CI/CD pipelines
-    developmentOnly 'me.paulschwarz:springboot4-dotenv:5.1.0'
+    //developmentOnly 'me.paulschwarz:springboot4-dotenv:5.1.0'
+    implementation 'me.paulschwarz:springboot4-dotenv:5.1.0'
 
     implementation 'org.springframework.boot:spring-boot-starter-security-oauth2-resource-server'
     implementation 'org.keycloak:keycloak-admin-client:23.0.7'
