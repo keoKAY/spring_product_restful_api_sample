@@ -1,9 +1,15 @@
 # configure client cred for keycloak ( for creating user )
+#keycloak:
+#  server-url: http://localhost:9999
+#  realm: spring-app-realm
+#  client-id: spring-boot-app
+#  client-secret: h84lQpSc3BwR68O6ElQCeGL719K7gk6Q
+
 keycloak:
-  server-url: http://localhost:9999
-  realm: spring-app-realm
-  client-id: spring-boot-app
-  client-secret: h84lQpSc3BwR68O6ElQCeGL719K7gk6Q
+  server-url: https://ite-keycloak.anajak-khmer.site
+  realm: ecommerce-realm
+  client-id: springboot-app
+  client-secret: wdKi8HYIeY3vJI2FvKTczu3oD3Vce4hV
 
 file:
     client-path: /files
@@ -16,7 +22,7 @@ spring:
       oauth2:
         resourceserver:
           jwt:
-            issuer-uri: http://localhost:9999/realms/spring-app-realm
+            issuer-uri: https://ite-keycloak.anajak-khmer.site/realms/ecommerce-realm
     servlet:
       multipart:
         max-file-size: 10MB # max allocation for single file size
