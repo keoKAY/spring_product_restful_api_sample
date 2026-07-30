@@ -2,6 +2,10 @@ plugins {
     id 'java'
     id 'org.springframework.boot' version '4.0.6'
     id 'io.spring.dependency-management' version '1.1.7'
+
+    // for code quality checking with sonarqube and jacoco
+    id 'org.sonarqube' version '4.4.1.3373'
+    id 'jacoco'
 }
 
 group = 'co.istad'
@@ -58,4 +62,23 @@ dependencies {
 
 tasks.named('test') {
     useJUnitPlatform()
+}
+
+// Ensure JaCOCO runs after tests for Sonar Coverage
+test{
+    finalizedBy jacocoTestReport
+}
+jacocoTestReport{
+    dependsOn test
+    reports{
+        xml.required = true
+    }
+}
+
+sonar{
+    properties{
+        property "sonar.projectKey", "ecommerce-spring-api"
+        property "sonar.projectName", "ECommerce-Spring-API"
+        property "sonar.coverage.jacoco.xmlReportPaths", "build/reports/jacoco/test/jacocoTestReport.xml"
+    }
 }
