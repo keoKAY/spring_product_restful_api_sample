@@ -6,6 +6,9 @@ plugins {
     // for code quality checking with sonarqube and jacoco
     id 'org.sonarqube' version '4.4.1.3373'
     id 'jacoco'
+
+    // auto inject the production env when run the spring
+    id 'io.github.dsdolzhenko.dotenv' version '0.1.0'
 }
 
 group = 'co.istad'
