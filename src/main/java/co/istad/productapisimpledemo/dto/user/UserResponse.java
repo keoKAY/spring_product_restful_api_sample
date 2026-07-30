@@ -8,9 +8,6 @@ public record UserResponse(
         Long id ,
         String email,
         String profileUrl,
-        String bio,
-        String firstName,
-        String lastName
-
+        String bio
 ) {
 }

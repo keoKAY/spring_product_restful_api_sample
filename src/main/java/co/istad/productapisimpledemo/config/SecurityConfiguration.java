@@ -2,7 +2,7 @@ package co.istad.productapisimpledemo.config;
 
 
 // Write the code to determine/config the security of spring
-
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.converter.Converter;
@@ -15,166 +15,104 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
+import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 @Configuration
 @EnableWebSecurity
-
-// To activates the @PreAuthorize
 @EnableMethodSecurity
 public class SecurityConfiguration {
+    @Value("${keycloak.client-id}")
+    private String clientId;
     // SecurityFilterChain
     @Bean
     public SecurityFilterChain configure(HttpSecurity http) throws Exception {
+        // 1. disable csrf  -> for stateless application
         http.csrf(AbstractHttpConfigurer::disable);
+        // 2. disable form login
         http.formLogin(AbstractHttpConfigurer::disable);
-        http.cors(Customizer.withDefaults());
-         http.sessionManagement(
-                 session ->
-                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+        // 3. make it become stateless for REST constraint
+        http.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
-      //   http.oauth2Login(Customizer.withDefaults());
+        // to be able to work with keycloak authorization server
+        http.oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()));
 
-        http.oauth2ResourceServer(
-                oauth2 -> oauth2.jwt(Customizer.withDefaults())
-        );
-
+        //http.httpBasic(Customizer.withDefaults());
+        // endpoint to be allowed or protected
         http.authorizeHttpRequests(
                 request->
            request
-                   // 1. ALWAYS permit OPTIONS for CORS pre-flights (crucial for frontend clients)
-                   .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                   .requestMatchers(
-                           "/api/v1/auth","/api/v1/data/forgot-password/**",
-                           "/api/v1/auth/**","/error").permitAll()
-                   .requestMatchers(
-                           "/scalar/**",
-                           "/v3/api-docs/**").permitAll()
-                   .requestMatchers(
-                           "/api/v1/files/**",
-                           "/files/**").permitAll()
-                   .requestMatchers(HttpMethod.GET,
-                           "/api/v1/categories/**").permitAll()
+                   // enable scalar
+                   .requestMatchers("/api/v1/admin","/api/v1/admin/**").hasRole("ADMIN")
+                   .requestMatchers("/api/v1/auth/register", "/api/v1/test/forgot-password/**").permitAll()
+                   .requestMatchers("/scalar/**", "/v3/api-docs/**").permitAll()
+                   .requestMatchers("/api/v1/files/**","/files/**").permitAll()
+                   .requestMatchers(HttpMethod.GET, "/api/v1/categories/**").permitAll()
+                   // file uploads
 
-                   .requestMatchers(HttpMethod.GET,
-                           "/api/v1/products/**", "/api/v1/tags",
-                           "/api/v1/tags/**").permitAll()
+            .requestMatchers(HttpMethod.GET, "/api/v1/products/**","/api/v1/tags/**").permitAll()
               // login successfully first to access it
                 .anyRequest().authenticated()
         );
-
-/*        http.oauth2ResourceServer(oauth2 ->
-                oauth2.jwt(jwt ->
-                        jwt.jwtAuthenticationConverter(jwtAuthenticationConverterForKeycloak())
-                )
-        );*/
         return http.build();
     }
 
-    // Usage: this is the bean configure to use the role realm instead of client
-   //  @Bean
-    /*public JwtAuthenticationConverter jwtAuthenticationConverterForKeycloak(){
-        Converter<Jwt, Collection<GrantedAuthority>> converter = jwt-> {
-            // 1. safely retrive the realm_access claim map
-            Map<String, Collection<String>> realmAccess = jwt.getClaim("realm_access");
-            if(realmAccess == null ) { return Collections.emptySet(); }
 
-            // 2. safely retrieve role list
-            var rolesObject = realmAccess.get("roles");
-            if(!(rolesObject instanceof Collection<?> roles )) return Collections.emptySet();
+    // USAGE: convert jwt to security object in spring
+    // granted-authority: role -> what can authenticated user can do
 
-            return roles.stream()
-                    .map(Object::toString)
-                    .map(role -> new SimpleGrantedAuthority("ROLE_"+role))
-                    .collect(Collectors.toSet());
-
-        };
-
-        var jwtAuthenticationConverter = new JwtAuthenticationConverter();
-        jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(converter);
-        return jwtAuthenticationConverter;
-
-    }*/
-
-
-    // Configure to use the client role for better practice
     @Bean
     @SuppressWarnings("unchecked")
-    public JwtAuthenticationConverter jwtAuthenticationConverterForKeycloak() {
-
+    public JwtAuthenticationConverter jwtAuthenticationConverter() {
+        // 1. created a converter object
         Converter<Jwt, Collection<GrantedAuthority>> converter = jwt -> {
-            // 1. Get the top-level 'resource_access' map
+            // 1. get  List of granted-authories
+            // get claim from resource_access
+//            "resource_access": {
+//                "spring-boot-app": {
+//                    "roles": [
+//                    "CUSTOMER"
+//      ]
+//                }
             Map<String, Object> resourceAccess = jwt.getClaim("resource_access");
-            if (resourceAccess == null) {
-                return Collections.emptySet();
-            }
-
-
-
-            // 2. Access your specific client configuration map (e.g., "spring-boot-app")
-           /* "resource_access": {
-                "spring-boot-app": {
-                    "roles": [
-                    "CUSTOMER"
-      ]
-                },
-                "account": {
-                    "roles": [
-                    "manage-account",
-                            "manage-account-links",
-                            "view-profile"
-      ]
-                }*/
-//            Map<String, Object> clientAccess = (Map<String, Object>) resourceAccess.get("spring-boot-app");
-//
-
-            var clientAccess = (Map<String, Object>) resourceAccess.get("spring-boot-app");
-            if (clientAccess == null) {
-                return Collections.emptySet();
-            }
-            // 3. Extract the list of roles assigned to this client
+            if(resourceAccess == null) { return Collections.emptySet(); }
+            var clientAccess = (Map<String, Object>) resourceAccess.get(clientId); // get role from spring-boot-app = client id
+            if(clientAccess == null) { return Collections.emptySet(); }
+            // get role object
             Object rolesObj = clientAccess.get("roles");
+
+            // check the type of the role
+            // if it's a collection , we can use it with stream
             if (!(rolesObj instanceof Collection<?> roles)) {
                 return Collections.emptySet();
             }
-
-            // 4. Map the client roles to Spring Security's GrantedAuthority
+            // CUSTOMER, SELLER -> ROLE_CUSTOMER, ROLE_SELLER
             return roles.stream()
                     .map(Object::toString)
                     .map(role -> {
-                        // if it's a granular authority like "product:create" , we keep it raw
-                        if(role.contains(":")) { return  new SimpleGrantedAuthority(role); }
-                        // If it's a business macro-role like "SELLER", prefix with ROLE_
-                        return new SimpleGrantedAuthority("ROLE_" + role);
+                        if(role.contains(":")) { return new SimpleGrantedAuthority(role); }
+                        return new SimpleGrantedAuthority("ROLE_"+role);
                     })
                     .collect(Collectors.toSet());
         };
 
-        JwtAuthenticationConverter jwtAuthenticationConverter = new JwtAuthenticationConverter();
-        jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(converter);
+        var jwtAuthenticationConverter = new JwtAuthenticationConverter();
+        jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(converter );
         return jwtAuthenticationConverter;
     }
-    @Bean
-    CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOriginPatterns(List.of("*"));
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        config.setAllowedHeaders(List.of("*"));
-        config.setAllowCredentials(true);
 
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", config);
-        return source;
-    }
+    // TODO: configure cors for allowing specific client to access
+
 }

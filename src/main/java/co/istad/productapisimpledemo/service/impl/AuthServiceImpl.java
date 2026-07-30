@@ -1,9 +1,9 @@
 package co.istad.productapisimpledemo.service.impl;
 
-import co.istad.productapisimpledemo.advisor.KeycloakOperationException;
+
 import co.istad.productapisimpledemo.dto.auth.RegisterRequest;
 import co.istad.productapisimpledemo.dto.auth.RegisterResponse;
-import co.istad.productapisimpledemo.dto.auth.UpdateUserRequest;
+import co.istad.productapisimpledemo.dto.auth.UserUpdateRequest;
 import co.istad.productapisimpledemo.dto.user.UserResponse;
 import co.istad.productapisimpledemo.entity.Profile;
 import co.istad.productapisimpledemo.entity.User;
@@ -11,338 +11,223 @@ import co.istad.productapisimpledemo.mapper.UserMapper;
 import co.istad.productapisimpledemo.repository.ProfileRepository;
 import co.istad.productapisimpledemo.repository.UserRepository;
 import co.istad.productapisimpledemo.service.AuthService;
-
-import jakarta.transaction.Transactional;
-import jakarta.ws.rs.WebApplicationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.jboss.resteasy.client.jaxrs.internal.ClientResponse;
 import org.keycloak.admin.client.CreatedResponseUtil;
 import org.keycloak.admin.client.Keycloak;
+import org.keycloak.admin.client.resource.RoleResource;
 import org.keycloak.admin.client.resource.UserResource;
 import org.keycloak.representations.idm.ClientRepresentation;
 import org.keycloak.representations.idm.CredentialRepresentation;
-import org.keycloak.representations.idm.RoleRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.NoSuchElementException;
 
-
-@Slf4j
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AuthServiceImpl implements AuthService {
-    private final ProfileRepository profileRepository;
-    private final UserMapper userMapper;
-    private final Keycloak keycloak;
     private final UserRepository userRepository;
+    private final ProfileRepository profileRepository;
+    // client used to create , manage the user in KC
+    private final Keycloak keycloak;
+    private final UserMapper userMapper;
     @Value("${keycloak.realm}")
-    private String realm;
+    private String realm ;
     @Value("${keycloak.client-id}")
     private String clientId;
 
-   // private Boolean validateClient(){}
-    // private validate the roleExists(){}
-    public ClientRepresentation getClientById(String clientId){
+    private ClientRepresentation getClientById(String clientId) {
         return keycloak.realm(realm)
                 .clients()
-                .findByClientId(clientId).stream()
-                .findFirst()
-                .orElseThrow(()-> new KeycloakOperationException(
-                        HttpStatus.NOT_FOUND, String.format("client with id %s not found", clientId)
-                ));
-    }
-    public RegisterResponse createUserInKeycloak(String realm ,
-                                                 RegisterRequest userRequest ){
-        // Define the user profile
-        UserRepresentation user = new UserRepresentation();
-
-        user.setUsername(userRequest.username());
-        user.setEmail(userRequest.email());
-        user.setFirstName(userRequest.firstName());
-        user.setLastName(userRequest.lastName());
-
-        // DEV-ONLY: Keycloak system data
-//        user.setEmailVerified(true);
-//        user.setEnabled(true);
-
-        // PROD-APPROACH
-        user.setEnabled(true);
-        user.setEmailVerified(false );
-        user.setRequiredActions(List.of("VERIFY_EMAIL"));
-
-        // customize the attributes
-        Map<String, List<String>> attributes = new HashMap<>();
-        attributes.put("gender", List.of(userRequest.gender().getGender()));
-        attributes.put("biography", List.of(userRequest.biography()));
-        user.setAttributes(attributes);
-
-        // Define the password credentials
-        CredentialRepresentation passwordCred = new CredentialRepresentation();
-        passwordCred.setTemporary(false);
-        passwordCred.setType(CredentialRepresentation.PASSWORD);
-        passwordCred.setValue(userRequest.password());
-        user.setCredentials(Collections.singletonList(passwordCred));
-
-        // send the creation request to the keycloak user
-        var userResource  = keycloak.realm(realm).users();
-        String createdUserId = null;
-
-       try(var response = userResource.create(user)){
-            int status = response.getStatus(); // getting the status values
-            log.info("Response status code: {}", response.getStatus());
-
-            if(response.getStatus() == HttpStatus.CREATED.value()){
-
-                // update the data
-                createdUserId = CreatedResponseUtil.getCreatedId(response);
-//                UserResource createdUser =
-//                        keycloak.realm(realm).users().get(userId);
-                // instead of getting the full user
-//                var createdUser = userResource.search(user.getUsername())
-//                        .getFirst();
-
-                // ---------------- for the REALM ROLE --------------------
-                /*RoleRepresentation role = keycloak.realm(realm)
-                                .roles()
-                                 .get("CUSTOMER")
-                                 .toRepresentation();
-                log.info("Created user: {}", createdUser);
-                createdUser.roles()
-                        .realmLevel()
-                        .add(List.of(role));*/
-
-                ClientRepresentation client = getClientById("spring-boot-app");
-                // set the default role to be CUSTOMER or SELLER
-                RoleRepresentation role = keycloak
-                        .realm(realm).clients()
-                        .get(client.getId())
-                        .roles()
-                        .get("CUSTOMER").toRepresentation();
-                // determine the role to be on the client level
-                UserResource createdUser = userResource.get(createdUserId);
-                // force keycloak to send the email immediately
-               // createdUser.executeActionsEmail(List.of("VERIFY_EMAIL"))
-
-                createdUser.roles()
-                        .clientLevel(client.getId())
-                        .add(List.of(role));
-                // sending email after created the user
-                log.info("Sending the verification email by keycloak");
-                createdUser.sendVerifyEmail();
-
-                return userMapper
-                        .toRegisterResponse(
-                               createdUser.toRepresentation()
-                        );
-            }
-
-            String error= "";
-            try{
-                error = response.readEntity(String.class);
-            }catch(Exception ignored){}
-
-           switch(status){
-            case 409 -> throw new KeycloakOperationException(HttpStatus.CONFLICT, "Username or email already exists "
-            );
-            case 400 -> throw new KeycloakOperationException(HttpStatus.BAD_REQUEST, error
-            );
-            default ->
-                throw new KeycloakOperationException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to create the user in keycloak "
+                .findByClientId(clientId)
+                .stream().findFirst().orElseThrow(
+                        () -> new NoSuchElementException("No client with id " + clientId)
                 );
+    }
+    private UserRepresentation createUserInKeycloak( RegisterRequest request) {
+       // 1. user representation -> store basic information (idm)
+       var userRepresentation = new UserRepresentation();
+       userRepresentation.setUsername(request.username());
+       userRepresentation.setEmail(request.email());
+       userRepresentation.setFirstName(request.firstName());
+       userRepresentation.setLastName(request.lastName());
 
-           }
-       } catch (WebApplicationException e) {
-           String keycloakErrorResponseBody = e.getResponse().readEntity(String.class);
-           log.error("Keycloak executeActionsEmail failed. Raw body text: {}", keycloakErrorResponseBody);
-           throw new RuntimeException("Keycloak Email Action Failure: " + keycloakErrorResponseBody, e);
-       }
-        catch(KeycloakOperationException ex ){
-           throw ex ;
-       }catch (Exception ex ){
-           log.error("Keycloak error : ", ex );
+       // emailVerified , enableAccount
+        userRepresentation.setEnabled(true);
+        userRepresentation.setEmailVerified(false); // temporary
+        userRepresentation.setRequiredActions(List.of("VERIFY_EMAIL"));
 
-           // something goes wrong, it will delete the user
-           if(createdUserId != null){
-               deleteUserFromKeycloak(realm, createdUserId);
-           }
-           throw new KeycloakOperationException(
-                   HttpStatus.INTERNAL_SERVER_ERROR,
-                   "Unable to communicate with keycloak"
-           );
-       }
+        // customize more info of the user in keycloak (optional)
+        // you will need to create this inside your keycloak as well
+        Map<String, List<String>> attributes = new HashMap<>();
+        attributes.put("gender", List.of(request.gender()));
+        attributes.put("biography", List.of(request.biography()));
 
+        userRepresentation.setAttributes(attributes);
+
+
+        // credential -> password
+        var cred = new CredentialRepresentation();
+        cred.setTemporary(false); // no need to change the password when first login
+        cred.setType(CredentialRepresentation.PASSWORD);
+        cred.setValue(request.password()); // pass & confirm Pass
+       // setting the password for this new user
+        userRepresentation.setCredentials(List.of(cred));
+
+        // creating the new object in kc
+        var resourceResource = keycloak.realm(realm).users();
+        try(var response = resourceResource.create(userRepresentation)){
+            // confirm if the user is created  , we will configure more
+            if(response.getStatus() == 201) {
+                // we will assign them the default role
+                // all register use will be in CUSTOMER ROLE
+               String userId = CreatedResponseUtil.getCreatedId(response);
+               UserResource userResource = keycloak.realm(realm).users().get(userId);
+               // assign the ROLE for the user in keycloak
+                var client = getClientById(clientId);
+
+                // create role representation ( role inside keycloak)
+                var roleRepresentation = keycloak.realm(realm)
+                        .clients().get(client.getId())
+                        .roles().get("CUSTOMER").toRepresentation();
+
+                // add role to the keycloak user
+                userResource.roles()
+                        .clientLevel(client.getId())
+                        .add(List.of(roleRepresentation));
+                log.info("Sending email verification to user: {}",userRepresentation.getEmail());
+                userResource.sendVerifyEmail();
+
+                userRepresentation.setId(userId);// keycloak id
+                return userRepresentation;
+                //return userMapper.toRegisterResponse(userRepresentation);
+            }else {
+                throw new RuntimeException("Error creating user in keycloak");
+            }
+            //
+        }catch(Exception ex){
+            ex.printStackTrace();
+            log.error("Error creating user in keycloak", ex);
+            throw new RuntimeException("Error creating user in keycloak");
+        }
+        //return null;
     }
 
-    @Transactional // Ensure the Spring DB transaction roll back if the DB operations failed
     @Override
     public RegisterResponse register(RegisterRequest request) {
-        if(!request.password().equals(request.confirmedPassword()))
-                throw new ResponseStatusException(
-                        HttpStatus.BAD_REQUEST,
-                        "Password doesn't much");
-        var kcResponse = createUserInKeycloak("ecommerce_realm", request);
+
+        // ensure that password matches
+        if(!request.password().equals(request.confirmedPassword())) {
+            throw new RuntimeException("Passwords don't match");
+        }
+        var kcResponse= createUserInKeycloak(request);
+        User user = new User();
+        // kcResponse.id() -> normal id not keycloak id
+        log.info("Value of KC ID : {}", kcResponse.getId());
+
+        user.setKeycloakId(kcResponse.getId());
+        user.setEmail(kcResponse.getEmail());
+        user.setUsername(kcResponse.getUsername());
+
+        Profile profile = new Profile();
+        profile.setFirstName(kcResponse.getFirstName());
+        profile.setLastName(kcResponse.getLastName());
+        profile.setGender(request.gender());
+        profile.setBio(request.biography());
+        profile.setUser(user);
+
+       // profile.setProfileUrl(request.profileUrl);
+        user.setProfile(profile);
+        var createdUser = userRepository.save(user);
+        return userMapper.toRegisterResponse(createdUser);
+
+    }
+
+    // TODO:
+    // update the user profile
+    // only the profile owner able to update their profile
+    // Date: 17-July-2026
+    public UserResponse updateUser(String keycloakId, UserUpdateRequest request){
+        // 1. update the spring side first
+        var oldUser = userRepository.findByKeycloakId(keycloakId)
+                .orElseThrow(()-> new NoSuchElementException("User with id " + keycloakId + " not found"));
+        var oldProfile = oldUser.getProfile();
+        if(request.firstName()!=null)
+                oldProfile.setFirstName(request.firstName());
+        if(request.lastName()!=null)
+                oldProfile.setLastName(request.lastName());
+        if(request.gender()!=null)
+                oldProfile.setGender(request.gender());
+        if(request.biography()!=null)
+                oldProfile.setBio(request.biography());
+        oldUser.setProfile(oldProfile);
+        // update the new data into spring database
+        var updatedUser = userRepository.save(oldUser);
+
+        // 2. update the keycloak side
         try{
-            User user = new User();
-            user.setKeycloakId(kcResponse.id());
-            user.setUsername(request.username());
-            user.setEmail(request.email());
-            Profile profile = new Profile();
-            // linked profile to the user
-            profile.setUser(user);
-            user.setProfile(profile);
+            var userResource = keycloak
+                                .realm(realm)
+                                .users().get(keycloakId);
+            // to change / update kc user information
+            var userRep = userResource.toRepresentation();
+            if(request.firstName()!=null)
+                userRep.setFirstName(request.firstName());
+            if(request.lastName()!=null)
+                userRep.setLastName(request.lastName());
 
-            // 2. Critical: use saveAndFlush to execute SQL statements immediately.
-            // this forces any database level constraint violates to throw inside this block
-           // userRepository.save(user);
-            userRepository.saveAndFlush(user);
-            return kcResponse;
-
+            // gender , biography
+            Map<String, List<String>> attributes = (userRep.getAttributes()!=null ?
+                    new HashMap<>(userRep.getAttributes())
+                    : new HashMap<>());
+           if(request.gender()!=null)
+                attributes.put("gender", List.of(request.gender()));
+           if(request.biography()!=null)
+                attributes.put("biography", List.of(request.biography()));
+           // update the attribute
+           userRep.setAttributes(attributes);
+           userResource.update(userRep); // update the whole kc user
+            return userMapper.toUserResponse(updatedUser);
         }catch(Exception ex){
-            deleteUserFromKeycloak("ecommerce_realm", kcResponse.id());
-            throw ex;
+            ex.printStackTrace();
+            log.error("Error saving user in keycloak", ex);
+            throw new RuntimeException("Error saving user in keycloak");
         }
-       // return null;
+
+
     }
 
+    // forgot-password
+    public void forgotPassword(String email){
+        try{
 
-
-    private void deleteUserFromKeycloak(String realm, String keycloakId) {
-        try {
-            keycloak.realm(realm)
+            var listUserRepresentation = keycloak
+                    .realm(realm)
                     .users()
-                    .get(keycloakId)
-                    .remove();
-
-            log.info("Rollback: deleted Keycloak user {}", keycloakId);
-
-        } catch (Exception e) {
-
-            log.error("CRITICAL CRASH: Failed to rollback Keycloak user: {}", keycloakId, e);
-
-        }
-    }
-
-
-
-    @Override
-    @Transactional
-    // int id = user id (spring user id ) should be using uuid though for better approach
-    public UserResponse updateUser(String keycloakId , UpdateUserRequest request ){
-        log.info("Update user: {}", keycloakId);
-        User user = userRepository.findUserByKeycloakId(keycloakId)
-                                    .orElseThrow(()-> new NoSuchElementException("User not found"));
-       var profile = user.getProfile();
-        // update the local database fields
-        if(request.gender()!= null ) profile.setGender(request.gender());
-        if(request.biography()!=null ) profile.setBio(request.biography());
-        if(request.firstName()!= null) profile.setFirstName(request.firstName());
-        if(request.lastName()!= null) profile.setLastName(request.lastName());
-
-        user.setProfile(profile); // perform the partial updates
-        var updatedUser = userRepository.save(user);
-
-        // UPDATE: the user  from keycloak side
-       try {
-           var kcResource = keycloak.realm(realm)
-                   .users()
-                   .get(user.getKeycloakId());
-           var kcUser = kcResource.toRepresentation();
-           // prevent keycloak misunderstood us trying to change the username
-           kcUser.setUsername(kcUser.getUsername());
-           // updated the fields inside the keycloak
-           if(request.firstName()!=null) kcUser.setFirstName(request.firstName());
-           if(request.lastName()!=null) kcUser.setLastName(request.lastName());
-
-           Map<String, List<String>> attributes = kcUser.getAttributes() != null
-                   ? new HashMap<>(kcUser.getAttributes())
-                   : new HashMap<>();
-
-           if (request.gender() != null) {
-               attributes.put("gender", List.of(request.gender()));
-           }
-           if (request.biography() != null) {
-               attributes.put("biography", List.of(request.biography()));
-           }
-           // add the attributes
-           kcUser.setAttributes(attributes);
-           // Will call to the KC api in order to udpate the data
-           kcResource.update(kcUser);
-       } catch (WebApplicationException e) {
-           e.printStackTrace();
-           String keycloakErrorBody = e.getResponse().readEntity(String.class);
-           log.error("Keycloak 400 Bad Request Reason: {}", keycloakErrorBody);
-
-           throw new KeycloakOperationException(
-                   HttpStatus.BAD_REQUEST,
-                   "Keycloak validation failed: " + keycloakErrorBody);
-//           throw new KeycloakOperationException(
-//                   HttpStatus.INTERNAL_SERVER_ERROR,
-//                   "Failed to update user, Transaction Rollback. ");
-       }catch (Exception e) {
-           log.error("Generic exception during Keycloak sync", e);
-           throw new KeycloakOperationException(
-                   HttpStatus.INTERNAL_SERVER_ERROR,
-                   "Failed to update user, Transaction Rollback.");
-       }
-
-        return userMapper.toUserResponse(updatedUser);
-    }
-
-
-
-    // reset the password
-    public void sendPasswordLinkReset(String email){
-        try {
-            var users = keycloak.realm(realm).users().searchByEmail(email, true);
-
-            // if there is no user
-            if (users.isEmpty()) {
-
-                log.warn("Password reset requested for non-existent email {}", email);
-                return;
+                    .searchByEmail(email, true );
+            // exact = true , exact match
+            if(listUserRepresentation.isEmpty()){
+                log.warn("Sending reset password to no-existent user with email {}", email);
+                return ;
             }
-            String kcUserId = users.getFirst().getId();
+
+            var kcUserId = listUserRepresentation.getFirst().getId();
             var userResource = keycloak.realm(realm).users().get(kcUserId);
 
-            String redirectUri = "http://localhost:3000/login";
+            log.info("Sending reset password to user with id {}",kcUserId);
             userResource.executeActionsEmail(List.of("UPDATE_PASSWORD"));
-            log.info("Password reset link successfully routed to: {}", email);
-        }catch(WebApplicationException ex)
-        {
-            String errorBody = ex.getResponse().readEntity(String.class);
-            log.error("Keycloak password reset action rejected: {}", errorBody);
-            throw new RuntimeException("Keycloak password reset failed: " + errorBody);
-        }
-    }
-    @Transactional
-    public void promoteCustomerToSeller(String keycloakId){
-        var user = userRepository.findUserByKeycloakId(keycloakId)
-                .orElseThrow(()-> new NoSuchElementException("User not found"));
 
-        // if we store the role inside our database
-        try{
-            var userResource = keycloak.realm(realm).users().get(user.getKeycloakId());
-            ClientRepresentation client = getClientById("spring-boot-app");
-            // set the default role to be CUSTOMER or SELLER
-            var  clientRoleResource = keycloak
-                    .realm(realm).clients()
-                    .get(client.getId())
-                    .roles();
-            RoleRepresentation customerRole = clientRoleResource.get("CUSTOMER").toRepresentation();
-            RoleRepresentation sellerRole = clientRoleResource.get("SELLER").toRepresentation();
-
-            userResource.roles().clientLevel(client.getId()).remove(List.of(customerRole));
-            userResource.roles().clientLevel(client.getId()).add(List.of(sellerRole));
-
-            log.info("Successfully promote customer to Seller");
         }catch(Exception ex){
-            log.error("Rollback: Failed to rollback Keycloak user: {}", keycloakId, ex);
-            throw new KeycloakOperationException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to promote the user ");
+            // TODO: handle better exception !
+            ex.printStackTrace();
+            log.error("Error saving user in keycloak", ex);
+            throw new RuntimeException("Error saving user in keycloak");
         }
     }
 }

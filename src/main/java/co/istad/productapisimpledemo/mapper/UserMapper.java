@@ -14,31 +14,18 @@ public interface UserMapper {
 
     @Mapping(target = "profileUrl", source = "profile.profileUrl")
     @Mapping(target="bio", source = "profile.bio")
-    @Mapping(target="firstName", source = "profile.firstName")
-    @Mapping(target = "lastName", source = "profile.lastName")
     UserResponse toUserResponse(User user);
     User toUser(CreateUserRequest request);
 
 
-    // for the mapping with the keycloaks
 
-    @Mapping(target = "gender", expression = "java(getGender(request))")
-    @Mapping(target = "biography", expression = "java(getBiography(request))")
-    RegisterResponse toRegisterResponse(UserRepresentation request);
+    // for register
+    RegisterResponse toRegisterResponse(UserRepresentation user);
 
-
-    default String getGender(UserRepresentation request) {
-
-        if(request.getAttributes()== null || request.getAttributes().isEmpty()) {
-            return null;
-        }
-        return request.getAttributes().get("gender").getFirst();
-    }
-    default String getBiography(UserRepresentation request) {
-
-        if(request.getAttributes()== null || request.getAttributes().isEmpty()) {
-            return null;
-        }
-        return request.getAttributes().get("biography").getFirst();
-    }
+    // entity to registerResponse
+    @Mapping(target = "firstName", source = "profile.firstName")
+    @Mapping(target ="lastName", source = "profile.lastName")
+    @Mapping(target = "biography" , source="profile.bio")
+    @Mapping(target = "gender", source = "profile.gender")
+    RegisterResponse toRegisterResponse(User user);
 }

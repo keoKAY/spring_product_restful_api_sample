@@ -1,36 +1,22 @@
-
-# configuration to enable the user creations inside the keycloak
+# configure client cred for keycloak ( for creating user )
 keycloak:
-    server-url: http://localhost:9999
-    realm: ecommerce_realm
-    client-secret: bK6I3SHJV3qgBsxv7wB3KyEamlcDwiO8
-    client-id: spring-boot-app
+  server-url: https://ite-keycloak.anajak-khmer.site 
+  realm: ecommerce-realm
+  client-id: springboot-app
+  client-secret: wdKi8HYIeY3vJI2FvKTczu3oD3Vce4hV
+
 file:
     client-path: /files
-    storage-location: /Users/kk/Engineering/ite-images/
+    storage-location: ite-images/
     base-url: http://localhost:${server.port}${file.client-path}/
 # http://localhost:8080/files/
 spring:
+  # issuer is the realm in keycloak that we configure
     security:
       oauth2:
         resourceserver:
           jwt:
-            issuer-uri: http://localhost:9999/realms/ecommerce_realm
-
-#      configuration for the client
-#        client:
-#          registration:
-#            keycloak:
-#              client-id: "spring-boot-app"
-#              client-secret: "bK6I3SHJV3qgBsxv7wB3KyEamlcDwiO8"
-#              scope: openid, profile, email, offline_access
-#              authorization-grant-type: authorization_code
-#              redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
-#          provider:
-#            keycloak:
-#              # change your actual keycloak host port and realm name
-#              issuer-uri: ${keycloak.server-url}/realms/${keycloak.realm}
-        # In order to verify the token being sent to client
+            issuer-uri: https://ite-keycloak.anajak-khmer.site/realms/spring-app-realm
     servlet:
       multipart:
         max-file-size: 10MB # max allocation for single file size
@@ -48,15 +34,10 @@ spring:
       password: ${DB_PASSWORD}
     jpa:
       hibernate:
-        ddl-auto: update  # create-drop    # create | update | none
+        ddl-auto:  update #  create-drop #update    # create | update | none
       show-sql: true          # log generated SQL
       properties:
         hibernate:
           format_sql: true
 server:
   port: 8080
-logging:
-  level:
-    org.springframework.security: TRACE
-    org.springframework.web: DEBUG
-    org.springframework.web.servlet.DispatcherServlet: TRACE

@@ -2,11 +2,14 @@ package co.istad.productapisimpledemo.service;
 
 import co.istad.productapisimpledemo.dto.auth.RegisterRequest;
 import co.istad.productapisimpledemo.dto.auth.RegisterResponse;
-import co.istad.productapisimpledemo.dto.auth.UpdateUserRequest;
+import co.istad.productapisimpledemo.dto.auth.UserUpdateRequest;
 import co.istad.productapisimpledemo.dto.user.UserResponse;
 
 public interface AuthService {
-    RegisterResponse register (RegisterRequest registryRequest );
 
-    UserResponse updateUser(String  keycloakId , UpdateUserRequest updateUserRequest );
+    // register the new user
+    RegisterResponse register(RegisterRequest request );
+    UserResponse updateUser(String keycloakID, UserUpdateRequest request);
+
+    void forgotPassword(String email);
 }
