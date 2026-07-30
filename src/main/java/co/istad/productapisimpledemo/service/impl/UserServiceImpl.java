@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 @Service
 @RequiredArgsConstructor
@@ -42,5 +43,12 @@ public class UserServiceImpl implements UserService {
         return userRepository.findAll()
                 .stream().map(userMapper::toUserResponse)
                 .toList();
+    }
+
+    @Override
+    public UserResponse getUserByKeycloakId(String keycloakId) {
+        return userMapper.toUserResponse(userRepository.findByKeycloakId(keycloakId).orElseThrow(
+                ()-> new NoSuchElementException("user not found with id: " + keycloakId)
+        ));
     }
 }

@@ -22,6 +22,9 @@ public class Profile {
     // more info you ever need
     private String profileUrl;
     private String bio;
+    private String gender;
+    private String firstName;
+    private String lastName;
 
     @OneToOne
     @JoinColumn(name = "user_id", unique = true, referencedColumnName = "id")
