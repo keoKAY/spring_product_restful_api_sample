@@ -15,14 +15,8 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -62,7 +56,7 @@ public class SecurityConfiguration {
                    // 1. ALWAYS permit OPTIONS for CORS pre-flights (crucial for frontend clients)
                    .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                    .requestMatchers(
-                           "/api/v1/auth",
+                           "/api/v1/auth","/api/v1/data/forgot-password/**",
                            "/api/v1/auth/**","/error").permitAll()
                    .requestMatchers(
                            "/scalar/**",
@@ -116,13 +110,17 @@ public class SecurityConfiguration {
 
     // Configure to use the client role for better practice
     @Bean
+    @SuppressWarnings("unchecked")
     public JwtAuthenticationConverter jwtAuthenticationConverterForKeycloak() {
+
         Converter<Jwt, Collection<GrantedAuthority>> converter = jwt -> {
             // 1. Get the top-level 'resource_access' map
             Map<String, Object> resourceAccess = jwt.getClaim("resource_access");
             if (resourceAccess == null) {
                 return Collections.emptySet();
             }
+
+
 
             // 2. Access your specific client configuration map (e.g., "spring-boot-app")
            /* "resource_access": {
@@ -154,7 +152,12 @@ public class SecurityConfiguration {
             // 4. Map the client roles to Spring Security's GrantedAuthority
             return roles.stream()
                     .map(Object::toString)
-                    .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
+                    .map(role -> {
+                        // if it's a granular authority like "product:create" , we keep it raw
+                        if(role.contains(":")) { return  new SimpleGrantedAuthority(role); }
+                        // If it's a business macro-role like "SELLER", prefix with ROLE_
+                        return new SimpleGrantedAuthority("ROLE_" + role);
+                    })
                     .collect(Collectors.toSet());
         };
 

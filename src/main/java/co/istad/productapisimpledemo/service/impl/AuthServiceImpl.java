@@ -42,6 +42,8 @@ public class AuthServiceImpl implements AuthService {
     private final UserRepository userRepository;
     @Value("${keycloak.realm}")
     private String realm;
+    @Value("${keycloak.client-id}")
+    private String clientId;
 
    // private Boolean validateClient(){}
     // private validate the roleExists(){}
@@ -292,6 +294,31 @@ public class AuthServiceImpl implements AuthService {
     }
 
 
+
+    // reset the password
+    public void sendPasswordLinkReset(String email){
+        try {
+            var users = keycloak.realm(realm).users().searchByEmail(email, true);
+
+            // if there is no user
+            if (users.isEmpty()) {
+
+                log.warn("Password reset requested for non-existent email {}", email);
+                return;
+            }
+            String kcUserId = users.getFirst().getId();
+            var userResource = keycloak.realm(realm).users().get(kcUserId);
+
+            String redirectUri = "http://localhost:3000/login";
+            userResource.executeActionsEmail(List.of("UPDATE_PASSWORD"));
+            log.info("Password reset link successfully routed to: {}", email);
+        }catch(WebApplicationException ex)
+        {
+            String errorBody = ex.getResponse().readEntity(String.class);
+            log.error("Keycloak password reset action rejected: {}", errorBody);
+            throw new RuntimeException("Keycloak password reset failed: " + errorBody);
+        }
+    }
     @Transactional
     public void promoteCustomerToSeller(String keycloakId){
         var user = userRepository.findUserByKeycloakId(keycloakId)
