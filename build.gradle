@@ -73,12 +73,11 @@ dependencies {
 
 tasks.named('test') {
     useJUnitPlatform()
-}
-
-// Ensure JaCOCO runs after tests for Sonar Coverage
-test{
+    // for jacoco coverage
     finalizedBy jacocoTestReport
 }
+
+
 jacocoTestReport{
     dependsOn test
     reports{
