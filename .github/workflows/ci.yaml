@@ -43,6 +43,9 @@ jobs:
           restore-keys: ${{ runner.os }}-sonar
       - name: Grant Execute Permission for Gradle
         run: chmod +x ./gradlew
+      - name: Create .env from Single secret
+        run: |
+            echo "${{ secrets.ENV_FILE}}" > .env
       - name: Build and Run Sonar Analysis
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
