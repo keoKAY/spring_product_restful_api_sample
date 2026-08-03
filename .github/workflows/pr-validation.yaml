@@ -1,11 +1,11 @@
-name: CI pipeline
+name: PR validation pipeline
 
 # condition
 on:
-  push:
-    branches:
-      - 'feature/**'
-      - 'fix/**'
+#  push:
+#    branches:
+#      - 'feature/**'
+#      - 'fix/**'
   pull_request:
     branches:
       - main
@@ -53,5 +53,5 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
         run: |
-          rm -rf ~/.gradle/caches/
+          # rm -rf ~/.gradle/caches/
           ./gradlew build sonar --info --stacktrace # --refresh-dependencies

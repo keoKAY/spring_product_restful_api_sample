@@ -4,13 +4,14 @@ package co.istad.productapisimpledemo;
 import co.istad.productapisimpledemo.dto.CategoryRequest;
 import co.istad.productapisimpledemo.dto.CategoryResponse;
 import co.istad.productapisimpledemo.entity.Category;
-import co.istad.productapisimpledemo.repository.CategoryRepository;
+import co.istad.productapisimpledemo.mapper.CategoryMapper;import co.istad.productapisimpledemo.repository.CategoryRepository;
 import co.istad.productapisimpledemo.service.impl.CategoryServiceImpl;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
+import org.mapstruct.factory.Mappers;import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoExtension;import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -24,31 +25,33 @@ import static org.mockito.Mockito.*;
 public class CategoryServiceImplTest {
     @Mock
     private CategoryRepository categoryRepository;
-    @InjectMocks
-    private CategoryServiceImpl categoryService;
 
+    private CategoryServiceImpl categoryService;
+    private CategoryMapper categoryMapper;
+    @BeforeEach
+    void setUp() {
+        categoryMapper = Mappers.getMapper(CategoryMapper.class);
+        categoryService = new CategoryServiceImpl(
+                categoryMapper,
+                categoryRepository
+        );
+    }
     @Test
     void shouldCreateCategorySuccessfully() {
 
         CategoryRequest request = new CategoryRequest(
-                "laptop", "just a standard category" , null , null
+                "Laptop", "just a standard category" , null , null
         );
 
         Category saved = new Category();
         saved.setId(1);
         saved.setName("Laptop");
-
         when(categoryRepository.save(any(Category.class)))
                 .thenReturn(saved);
-
         CategoryResponse response = categoryService.createCategory(request);
-
         assertNotNull(response);
-
         assertEquals(1, response.id());
-
         assertEquals("Laptop", response.name());
-
         verify(categoryRepository, times(1))
                 .save(any(Category.class));
     }
@@ -58,6 +61,8 @@ public class CategoryServiceImplTest {
         Category category = new Category();
         category.setId(5);
         category.setName("Phone");
+
+
         when(categoryRepository.findById(5))
                 .thenReturn(Optional.of(category));
 
@@ -86,14 +91,17 @@ public class CategoryServiceImplTest {
     @Test
     void shouldDeleteCategory() {
 
+        when(categoryRepository.existsById(1))
+                .thenReturn(true);
+
         doNothing()
                 .when(categoryRepository)
                 .deleteById(1);
 
         categoryService.deleteCategory(1);
 
-        verify(categoryRepository)
-                .deleteById(1);
+        verify(categoryRepository).existsById(1);
+        verify(categoryRepository).deleteById(1);
     }
 
     @Test
@@ -126,17 +134,12 @@ public class CategoryServiceImplTest {
         Category category = new Category();
 
         category.setId(1);
-
         category.setName("Laptop");
-
         when(categoryRepository.findByNameContainingIgnoreCase("lap"))
                 .thenReturn(List.of(category));
-
         List<CategoryResponse> response =
                 categoryService.findByName("lap");
-
         assertEquals(1, response.size());
-
         assertEquals("Laptop",
                 response.get(0).name());
     }
