@@ -124,15 +124,12 @@ public class CategoryServiceImplTest {
                 categoryService.findAll();
 
         assertEquals(2, result.size());
-
         verify(categoryRepository).findAll();
     }
 
     @Test
     void shouldFindCategoryByName() {
-
         Category category = new Category();
-
         category.setId(1);
         category.setName("Laptop");
         when(categoryRepository.findByNameContainingIgnoreCase("lap"))

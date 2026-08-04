@@ -59,12 +59,12 @@ jobs:
       # Checkstyle
       - name: Run Checkstyle
         run: ./gradlew checkstyleMain checkstyleTest
-        if: false
+        if: true
 
-      # SpotBugs
+      # SpotBugs (Enabled)
       - name: Run SpotBugs
         run: ./gradlew spotbugsMain
-        if: false
+        if: true
       # Build Jar
       - name: Build Application
         run: ./gradlew bootJar
