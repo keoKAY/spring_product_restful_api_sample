@@ -68,12 +68,13 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     public CategoryResponse findById(Integer id) {
-        return null;
+        return categoryMapper.toResponse(categoryRepository.findById(id).get());
     }
 
     @Override
     public List<CategoryResponse> findByName(String name) {
-        return List.of();
+        return categoryRepository.findByNameContainingIgnoreCase(name).stream()
+                .map(categoryMapper::toResponse).toList();
     }
 
     @Override
