@@ -102,7 +102,7 @@ jobs:
         - name: Deploy on GCP
           uses: appleboy/ssh-action@v1.0.0
           env:
-            IMAGE: ${{secrets.GH_USERNAME}}/ite-spring-g3:${{env.TAG}}
+            IMAGE: ${{secrets.DH_USERNAME}}/ite-spring-g3:${{env.TAG}}
           with:
               host: ${{ secrets.GCP_IP }}
               username: ${{ secrets.GCP_USER }}
