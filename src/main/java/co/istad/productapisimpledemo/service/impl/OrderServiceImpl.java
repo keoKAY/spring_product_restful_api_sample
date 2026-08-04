@@ -1,7 +1,6 @@
 package co.istad.productapisimpledemo.service.impl;
 
 import co.istad.productapisimpledemo.dto.order.CreateOrderRequest;
-import co.istad.productapisimpledemo.dto.order.OrderItemResponse;
 import co.istad.productapisimpledemo.dto.order.OrderResponse;
 import co.istad.productapisimpledemo.entity.Order;
 import co.istad.productapisimpledemo.entity.OrderLine;
@@ -12,14 +11,13 @@ import co.istad.productapisimpledemo.repository.ProductRepository;
 import co.istad.productapisimpledemo.repository.UserRepository;
 import co.istad.productapisimpledemo.service.OrderService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.UUID;
+
 
 @Service
 @RequiredArgsConstructor

@@ -15,7 +15,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.keycloak.admin.client.CreatedResponseUtil;
 import org.keycloak.admin.client.Keycloak;
-import org.keycloak.admin.client.resource.RoleResource;
 import org.keycloak.admin.client.resource.UserResource;
 import org.keycloak.representations.idm.ClientRepresentation;
 import org.keycloak.representations.idm.CredentialRepresentation;
@@ -43,6 +42,7 @@ public class AuthServiceImpl implements AuthService {
     private String clientId;
 
     private ClientRepresentation getClientById(String clientId) {
+        log.info("Getting client by id {}", clientId);
         return keycloak.realm(realm)
                 .clients()
                 .findByClientId(clientId)

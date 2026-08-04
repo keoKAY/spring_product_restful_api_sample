@@ -1,0 +1,71 @@
+name: Feature Branch CI
+on:
+  push:
+      branches:
+        - 'feature/**'
+
+jobs:
+  light-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clone code
+        uses: actions/checkout@v4
+      - name: Setup JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: '25'
+          distribution: 'temurin'
+          cache: gradle
+      - name: Cache Gradle Packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*','**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+            # Make Gradle executable
+      - name: Grant Execute Permission
+        run: chmod +x gradlew
+      # Compile only
+      - name: Compile
+        run: ./gradlew compileJava
+      - name: Run Unit Tests
+        env:
+ #Match whatever environment variables your app/dotenv expects
+          SPRING_PROFILES_ACTIVE: test
+          DB_URL: jdbc:h2:mem:testdb
+          DB_USERNAME: sa
+          DB_PASSWORD: ""
+        run: ./gradlew test
+      - name: Generate the Jacoco Report
+        run: ./gradlew jacocoTestReport
+  # clean code check: (unused imports, import * , ... )
+      - name: Run Checkstyle
+        run: ./gradlew checkstyleMain checkstyleTest
+        if: true  # it will run , if: false
+
+      - name: Run SpotBugs
+        run: ./gradlew spotbugsMain
+        if: false
+      # to view reports after checked
+      - name: Upload Checkstyle Report
+        uses: actions/upload-artifact@v4
+        if: always() # Upload even if Checkstyle failed
+        with:
+          name: checkstyle-report
+          path: build/reports/checkstyle/
+      - name: Build Application
+        run: ./gradlew bootJar
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: spring-boot-jar
+          path: build/libs/*.jar
+      # Upload JaCoCo Report
+      - name: Upload Coverage Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco-report
+          path: build/reports/jacoco/

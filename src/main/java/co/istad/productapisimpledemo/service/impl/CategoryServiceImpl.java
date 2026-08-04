@@ -13,7 +13,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.NoSuchElementException;
-
 @Service
 @RequiredArgsConstructor
 public class CategoryServiceImpl implements CategoryService {
@@ -69,12 +68,13 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     public CategoryResponse findById(Integer id) {
-        return null;
+        return categoryMapper.toResponse(categoryRepository.findById(id).get());
     }
 
     @Override
     public List<CategoryResponse> findByName(String name) {
-        return List.of();
+        return categoryRepository.findByNameContainingIgnoreCase(name).stream()
+                .map(categoryMapper::toResponse).toList();
     }
 
     @Override

@@ -1,10 +1,10 @@
 package co.istad.productapisimpledemo.entity;
+
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.springframework.context.annotation.EnableMBeanExport;
 
 import java.util.ArrayList;
 import java.util.List;
