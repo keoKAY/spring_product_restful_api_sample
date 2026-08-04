@@ -3,6 +3,8 @@ services:
     image: username/image-name/tag
     container_name: product-api
     restart: always
+    env_file:
+      - .env
 #    environment:
 #      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/product_db
 #      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}

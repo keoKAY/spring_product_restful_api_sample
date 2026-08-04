@@ -90,6 +90,8 @@ jobs:
         - name: Using COMMIT SHA as tag
           run: |
             echo "TAG=${GITHUB_SHA::8}" >> $GITHUB_ENV
+
+
         - name: COPY prod-compose.yaml to the server
           uses: appleboy/scp-action@v0.1.7
           with:
@@ -103,6 +105,7 @@ jobs:
           uses: appleboy/ssh-action@v1.0.0
           env:
             IMAGE: ${{secrets.DH_USERNAME}}/ite-spring-g3:${{env.TAG}}
+            ENV_CONTENT: ${{secrets.ENV_FILE}}
           with:
               host: ${{ secrets.GCP_IP }}
               username: ${{ secrets.GCP_USER }}
@@ -111,7 +114,8 @@ jobs:
               script: |
                 cd /opt/product-api
                 echo "Deploying Image : $IMAGE" 
-    
+                echo "$ENV_CONTENT" > .env
+                
                 echo "Update the image name and tags" 
                 yq -i '.services.product-api.image = strenv(IMAGE)' /opt/product-api/prod-compose.yaml
                 
