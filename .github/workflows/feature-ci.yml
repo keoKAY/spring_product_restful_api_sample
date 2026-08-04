@@ -66,6 +66,13 @@ jobs:
       - name: Run Checkstyle
         run: ./gradlew checkstyleMain checkstyleTest
         if: true
+          # Upload Checkstyle HTML Report
+      - name: Upload Checkstyle Report
+        uses: actions/upload-artifact@v4
+        if: always() # Upload even if Checkstyle failed
+        with:
+          name: checkstyle-report
+          path: build/reports/checkstyle/
 
       # SpotBugs (Enabled)
       - name: Run SpotBugs
