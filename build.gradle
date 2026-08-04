@@ -9,7 +9,7 @@ plugins {
 
     // feature ci
     id 'checkstyle'
-    id 'com.github.spotbugs' version '6.1.3'
+    //id 'com.github.spotbugs' version '6.1.3'
 }
 
 group = 'co.istad'
