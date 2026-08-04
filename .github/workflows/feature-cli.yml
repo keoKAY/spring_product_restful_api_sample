@@ -32,12 +32,12 @@ jobs:
       - name: Compile
         run: ./gradlew compileJava
       - name: Run Unit Tests
-#        env:
-# Match whatever environment variables your app/dotenv expects
-#          SPRING_PROFILES_ACTIVE: test
-#          DB_URL: jdbc:h2:mem:testdb
-#          DB_USERNAME: sa
-#          DB_PASSWORD: ""
+        env:
+ #Match whatever environment variables your app/dotenv expects
+          SPRING_PROFILES_ACTIVE: test
+          DB_URL: jdbc:h2:mem:testdb
+          DB_USERNAME: sa
+          DB_PASSWORD: ""
         run: ./gradlew test
       - name: Generate the Jacoco Report
         run: ./gradlew jacocoTestReport
