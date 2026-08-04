@@ -65,10 +65,10 @@ jobs:
 
       - name: Using COMMIT SHA as tag
         run: |
-            echo "TAG=${GITHUB_SHA::8}" >> $GITHUB_ENV
+            echo "TAG=${{GITHUB_SHA::8}}" >> $GITHUB_ENV
       - name: Login with dockerhub
         run:
-            echo "${secrets.DH_PASSWORD}" | docker login -u ${secrets.DH_USERNAME} --password-stdin
+            echo "${{secrets.DH_PASSWORD}}" | docker login -u ${{secrets.DH_USERNAME}} --password-stdin
       - name: Build the docker image
         run: |
             docker build -t ${{secrets.USERNAME}}/ite-spring-g3/v1.0.${{env.TAG}} .
