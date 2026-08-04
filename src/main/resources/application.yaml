@@ -9,7 +9,7 @@ keycloak:
   server-url: https://ite-keycloak.anajak-khmer.site
   realm: ecommerce-realm
   client-id: springboot-app
-  client-secret: wdKi8HYIeY3vJI2FvKTczu3oD3Vce4hV
+  client-secret: CF1I9QYQM3ZcJLRShA3DwkmYndrnvmGe
 
 file:
     client-path: /files

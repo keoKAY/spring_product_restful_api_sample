@@ -43,6 +43,7 @@ public class AuthServiceImpl implements AuthService {
     private String clientId;
 
     private ClientRepresentation getClientById(String clientId) {
+        log.info("Getting client by id {}", clientId);
         return keycloak.realm(realm)
                 .clients()
                 .findByClientId(clientId)
