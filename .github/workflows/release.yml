@@ -84,6 +84,10 @@ jobs:
       environment: PRODUCTION
 
       steps:
+      # clone the code to get the docker compose file
+        - name: Checkout Repository
+          uses: actions/checkout@v4
+
         - name: COPY prod-compose.yaml to the server
           uses: appleboy/scp-action@v0.1.7
           with:
@@ -109,7 +113,7 @@ jobs:
                 yq -i '.services."product-api".image = strenv(IMAGE)' prod-compose.yaml
                 
                 docker login -u ${{secrets.DH_USERNAME}} -p ${{secrets.DH_PASSWORD}}
-                docker compose up -d 
+                docker compose up -d -f prod-compose.yaml
                 docker image prune -f 
             
             
