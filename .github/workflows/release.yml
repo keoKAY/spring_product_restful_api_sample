@@ -74,7 +74,7 @@ jobs:
             docker build -t ${{secrets.DH_USERNAME}}/ite-spring-g3/v1.0.${{env.TAG}} .
       - name: Store the image inside the registry
         run: |
-            docker push ${{secrets.USERNAME}}/ite-spring-g3/v1.0.${{env.TAG}}
+            docker push ${{secrets.DH_USERNAME}}/ite-spring-g3/v1.0.${{env.TAG}}
       - name: logout
         if: always()
         run: docker logout
