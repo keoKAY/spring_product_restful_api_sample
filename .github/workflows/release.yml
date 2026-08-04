@@ -71,10 +71,10 @@ jobs:
             echo "${{secrets.DH_PASSWORD}}" | docker login -u ${{secrets.DH_USERNAME}} --password-stdin
       - name: Build the docker image
         run: |
-            docker build -t ${{secrets.DH_USERNAME}}/ite-spring-g3/v1.0.${{env.TAG}} .
+            docker build -t ${{secrets.DH_USERNAME}}/ite-spring-g3/${{env.TAG}} .
       - name: Store the image inside the registry
         run: |
-            docker push ${{secrets.DH_USERNAME}}/ite-spring-g3/v1.0.${{env.TAG}}
+            docker push ${{secrets.DH_USERNAME}}/ite-spring-g3/${{env.TAG}}
       - name: logout
         if: always()
         run: docker logout
@@ -95,7 +95,7 @@ jobs:
         - name: Deploy on GCP
           uses: appleboy/ssh-action@v1.0.0
           env:
-            IMAGE: ${{secrets.USERNAME}}/ite-spring-g3/v1.0.${{env.TAG}}
+            IMAGE: ${{secrets.USERNAME}}/ite-spring-g3/${{env.TAG}}
           with:
               host: ${{ secrets.GCP_IP }}
               username: ${{ secrets.GCP_USER }}
