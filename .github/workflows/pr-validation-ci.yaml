@@ -1,10 +1,10 @@
-name: CI pipeline
+name: PR Validation pipeline
 # condition
 on:
-  push:
-    branches:
-      - 'feature/**'
-      - 'fix/**' # hotfix
+#  push:
+#    branches:
+#      - 'feature/**'
+#      - 'fix/**' # hotfix
   pull_request:
       branches:
         - main
