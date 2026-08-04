@@ -111,9 +111,9 @@ jobs:
               script: |
                 cd /opt/product-api
                 echo "Deploying Image : $IMAGE" 
-                
+    
                 echo "Update the image name and tags" 
-                yq -i '.services."product-api".image = strenv(IMAGE)' /opt/product-api/prod-compose.yaml
+                yq -i '.services.product-api.image = strenv(IMAGE)' /opt/product-api/prod-compose.yaml
                 
                 docker login -u ${{secrets.DH_USERNAME}} -p ${{secrets.DH_PASSWORD}}
                 docker compose -f /opt/product-api/prod-compose.yaml up -d 
