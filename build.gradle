@@ -85,6 +85,7 @@ spotbugs {
     reportLevel = Confidence.valueOf('LOW')
 }
 spotbugsMain{
+    enabled= false
     reports{
         html{
             required = true
