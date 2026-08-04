@@ -87,7 +87,9 @@ jobs:
       # clone the code to get the docker compose file
         - name: Checkout Repository
           uses: actions/checkout@v4
-
+        - name: Using COMMIT SHA as tag
+          run: |
+            echo "TAG=${GITHUB_SHA::8}" >> $GITHUB_ENV
         - name: COPY prod-compose.yaml to the server
           uses: appleboy/scp-action@v0.1.7
           with:
@@ -96,10 +98,11 @@ jobs:
             key: ${{ secrets.GCP_PRIVATE_KEY}}
             source: "prod-compose.yaml"
             target: "/opt/product-api"
+
         - name: Deploy on GCP
           uses: appleboy/ssh-action@v1.0.0
           env:
-            IMAGE: ${{secrets.USERNAME}}/ite-spring-g3:${{env.TAG}}
+            IMAGE: ${{secrets.GH_USERNAME}}/ite-spring-g3:${{env.TAG}}
           with:
               host: ${{ secrets.GCP_IP }}
               username: ${{ secrets.GCP_USER }}
@@ -113,7 +116,7 @@ jobs:
                 yq -i '.services."product-api".image = strenv(IMAGE)' prod-compose.yaml
                 
                 docker login -u ${{secrets.DH_USERNAME}} -p ${{secrets.DH_PASSWORD}}
-                docker compose up -d -f prod-compose.yaml
+                docker compose -f prod-compose.yaml up -d 
                 docker image prune -f 
             
             

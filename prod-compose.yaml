@@ -3,9 +3,6 @@ services:
     image: username/image-name/tag
     container_name: product-api
     restart: always
-    depends_on:
-      postgres:
-        condition: service_healthy
 #    environment:
 #      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/product_db
 #      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
@@ -13,7 +10,8 @@ services:
     labels:
       - traefik.enable=true
       # HTTPS
-      - traefik.http.routers.product.rule=Host(`${APP_DOMAIN}`)
+    # we will hide the domain name later
+      - traefik.http.routers.product.rule=Host(`ite-spring.anajak-khmer.site`)
       - traefik.http.routers.product.entrypoints=websecure
       - traefik.http.routers.product.tls.certresolver=myresolver
       - traefik.http.services.product.loadbalancer.server.port=8080
