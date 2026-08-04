@@ -352,7 +352,7 @@ These help catch subtle runtime issues and container security problems.
 From our previous conversations, I know your goal isn't just to make a CI pipeline work—you want to understand the reasoning behind each tool and build a professional DevOps workflow.
 
 So instead of jumping straight to a large production pipeline, I'd suggest we build it in stages:
-
+---
 1. **CI v1:** Build + Unit Tests + JaCoCo
 2. **CI v2:** Add Checkstyle
 3. **CI v3:** Add SpotBugs
