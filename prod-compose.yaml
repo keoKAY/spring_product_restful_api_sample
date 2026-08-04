@@ -1,0 +1,26 @@
+services:
+  product-api:
+    image: username/image-name/tag
+    container_name: product-api
+    restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+#    environment:
+#      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/product_db
+#      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
+#      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+    labels:
+      - traefik.enable=true
+      # HTTPS
+      - traefik.http.routers.product.rule=Host(`${APP_DOMAIN}`)
+      - traefik.http.routers.product.entrypoints=websecure
+      - traefik.http.routers.product.tls.certresolver=myresolver
+      - traefik.http.services.product.loadbalancer.server.port=8080
+
+    networks:
+      - proxy_net
+networks:
+  proxy_net:
+    name: preparations_proxy_net
+    external: true
