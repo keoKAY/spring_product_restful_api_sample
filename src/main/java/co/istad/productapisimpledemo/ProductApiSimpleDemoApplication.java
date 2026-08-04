@@ -7,10 +7,7 @@ import org.springframework.data.web.config.EnableSpringDataWebSupport;
 // Customize the metadata response of JPA pagination
 @EnableSpringDataWebSupport(pageSerializationMode = EnableSpringDataWebSupport.PageSerializationMode.VIA_DTO)
 @SpringBootApplication
-
-// update
 public class ProductApiSimpleDemoApplication {
-
     public static void main(String[] args) {
         SpringApplication.run(ProductApiSimpleDemoApplication.class, args);
     }
