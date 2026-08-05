@@ -12,7 +12,7 @@ keycloak:
   client-secret: ${KC_CLIENT_SECRET}
 file:
     client-path: /files
-    storage-location: /app/images
+    storage-location: /app/images/
     base-url: https://ite-spring.anajak-khmer.site${file.client-path}/
   #  base-url: http://localhost:${server.port}${file.client-path}/
 # http://localhost:8080/files/
