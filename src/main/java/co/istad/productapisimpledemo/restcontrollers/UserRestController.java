@@ -4,7 +4,6 @@ package co.istad.productapisimpledemo.restcontrollers;
 import co.istad.productapisimpledemo.dto.user.CreateUserRequest;
 import co.istad.productapisimpledemo.dto.user.UserResponse;
 import co.istad.productapisimpledemo.service.UserService;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 

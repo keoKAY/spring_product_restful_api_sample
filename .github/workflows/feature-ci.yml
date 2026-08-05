@@ -3,10 +3,10 @@ on:
   push:
       branches:
         - 'feature/**'
-
 jobs:
   light-test:
     runs-on: ubuntu-latest
+    environment: SONARQUBE
     steps:
       - name: Clone code
         uses: actions/checkout@v4
@@ -26,6 +26,11 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
             # Make Gradle executable
+      - name: Create .env from SECRET
+        env:
+          ENV_CONTENT: ${{secrets.ENV_FILE}}
+        run: |
+          echo "$ENV_CONTENT" > .env
       - name: Grant Execute Permission
         run: chmod +x gradlew
       # Compile only
@@ -39,6 +44,7 @@ jobs:
           DB_USERNAME: sa
           DB_PASSWORD: ""
         run: ./gradlew test
+
       - name: Generate the Jacoco Report
         run: ./gradlew jacocoTestReport
   # clean code check: (unused imports, import * , ... )

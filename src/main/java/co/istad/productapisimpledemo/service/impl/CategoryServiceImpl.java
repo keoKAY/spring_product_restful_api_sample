@@ -68,7 +68,9 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     public CategoryResponse findById(Integer id) {
-        return categoryMapper.toResponse(categoryRepository.findById(id).get());
+        return categoryMapper.toResponse(categoryRepository.findById(id).stream().findFirst().orElseThrow(
+                ()-> new NoSuchElementException("Category with id = " + id + " doesn't exists ! ")
+        ));
     }
 
     @Override
