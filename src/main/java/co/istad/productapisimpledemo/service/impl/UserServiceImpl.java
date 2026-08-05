@@ -28,8 +28,9 @@ public class UserServiceImpl implements UserService {
         User user = userMapper.toUser(request);
         Profile profile = new Profile();
 
-        profile.setBio(request.bio());
         profile.setProfileUrl(request.profileUrl());
+        profile.setGender("Female");
+        profile.setBio("ISTAD"+ request.bio());
          // linked profile to user
         profile.setUser(user);
         user.setProfile(profile);
