@@ -23,17 +23,21 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserResponse createUser(CreateUserRequest request) {
-        log.info("Create user request: {}", request);
+//        log.info("Create user request: {}", request);
         var user = userMapper.toUser(request);
         var profile = new Profile();
+        log.info("Profile of the user: {}", profile);
 
-        profile.setBio(request.bio());
         profile.setProfileUrl(request.profileUrl());
+        profile.setGender("Female");
+        profile.setBio("ISTAD"+ request.bio());
          // linked profile to user
         profile.setUser(user);
         user.setProfile(profile);
-        log.info("Profile is : {}", profile);
-        return userMapper.toUserResponse(userRepository.save(user));
+
+        var response =  userRepository.save(user);
+        return userMapper.toUserResponse(response);
+
     }
 
     @Override
