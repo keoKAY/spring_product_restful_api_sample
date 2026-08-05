@@ -3,6 +3,7 @@ package co.istad.productapisimpledemo.service.impl;
 import co.istad.productapisimpledemo.dto.user.CreateUserRequest;
 import co.istad.productapisimpledemo.dto.user.UserResponse;
 import co.istad.productapisimpledemo.entity.Profile;
+import co.istad.productapisimpledemo.entity.User;
 import co.istad.productapisimpledemo.mapper.UserMapper;
 import co.istad.productapisimpledemo.repository.ProfileRepository;
 import co.istad.productapisimpledemo.repository.UserRepository;
@@ -23,9 +24,9 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserResponse createUser(CreateUserRequest request) {
-        log.info("Create user request: {}", request);
-        var user = userMapper.toUser(request);
-        var profile = new Profile();
+        log.info("Create user from client: {}", request);
+        User user = userMapper.toUser(request);
+        Profile profile = new Profile();
 
         profile.setBio(request.bio());
         profile.setProfileUrl(request.profileUrl());
