@@ -6,11 +6,10 @@
 #  client-secret: h84lQpSc3BwR68O6ElQCeGL719K7gk6Q
 
 keycloak:
-  server-url: https://ite-keycloak.anajak-khmer.site
-  realm: ecommerce-realm
-  client-id: springboot-app
-  client-secret: CF1I9QYQM3ZcJLRShA3DwkmYndrnvmGe
-
+  server-url: ${KC_HOST}
+  realm: ${KC_REALM}
+  client-id: ${KC_CLIENT}
+  client-secret: ${KC_CLIENT_SECRET}
 file:
     client-path: /files
     storage-location: /Users/kk/Engineering/ite-images/
@@ -22,7 +21,7 @@ spring:
       oauth2:
         resourceserver:
           jwt:
-            issuer-uri: https://ite-keycloak.anajak-khmer.site/realms/ecommerce-realm
+            issuer-uri: ${KC_HOST}/realms/${KC_REALM}
     servlet:
       multipart:
         max-file-size: 10MB # max allocation for single file size

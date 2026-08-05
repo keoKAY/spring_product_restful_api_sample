@@ -110,7 +110,7 @@ jobs:
               host: ${{ secrets.GCP_IP }}
               username: ${{ secrets.GCP_USER }}
               key: ${{ secrets.GCP_PRIVATE_KEY}}
-              envs: IMAGE
+              envs: IMAGE,ENV_CONTENT
               script: |
                 cd /opt/product-api
                 echo "Deploying Image : $IMAGE" 
