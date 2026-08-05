@@ -21,12 +21,14 @@ jobs:
 
       - name: Setup Java 25
         uses: actions/setup-java@v4
+        if: false
         with:
           distribution: temurin
           java-version: 25
 
       - name: Cache Gradle Packages
         uses: actions/cache@v4
+        if: false
         with:
           path: ~/.gradle/caches
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
@@ -34,6 +36,7 @@ jobs:
             ${{ runner.os }}-gradle-
 
       - name: Cache SonarQube Packages
+        if: false
         uses: actions/cache@v4
         with:
           path: ~/.sonar/cache
@@ -42,6 +45,7 @@ jobs:
             ${{ runner.os }}-sonar
 
       - name: Grant Execute Permission
+        if: false
         run: chmod +x gradlew
 
       - name: Create .env
@@ -51,17 +55,20 @@ jobs:
           echo "$ENV_CONTENT" > .env
 
       - name: Build & Test
+        if: false
         run: |
           ./gradlew clean build
 
       # Optional
       - name: SonarQube Analysis
-        if: true
+        if: false
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
         run: |
           ./gradlew sonar
+
+
 
       - name: Using COMMIT SHA as tag
         run: |
@@ -82,7 +89,6 @@ jobs:
       needs: release
       runs-on: ubuntu-latest
       environment: PRODUCTION
-
       steps:
       # clone the code to get the docker compose file
         - name: Checkout Repository

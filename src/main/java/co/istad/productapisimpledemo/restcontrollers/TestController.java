@@ -3,10 +3,8 @@ package co.istad.productapisimpledemo.restcontrollers;
 
 import co.istad.productapisimpledemo.dto.auth.UserUpdateRequest;
 import co.istad.productapisimpledemo.dto.user.UserResponse;
-import co.istad.productapisimpledemo.repository.UserRepository;
 import co.istad.productapisimpledemo.service.AuthService;
 import co.istad.productapisimpledemo.service.UserService;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -23,6 +21,11 @@ public class TestController {
 
     // for testing the update profile features
     private final AuthService authService;
+
+    @GetMapping("/testing")
+    public String testing(){
+        return "Just Testing stuff";
+    }
 
     @GetMapping("/profile")
     public UserResponse getProfile(@AuthenticationPrincipal Jwt jwt) {

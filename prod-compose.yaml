@@ -1,6 +1,6 @@
 services:
   product-api:
-    image: username/image-name/tag
+    image: username/image-name:tag
     container_name: product-api
     restart: always
     env_file:
@@ -17,7 +17,8 @@ services:
       - traefik.http.routers.product.entrypoints=websecure
       - traefik.http.routers.product.tls.certresolver=myresolver
       - traefik.http.services.product.loadbalancer.server.port=8080
-
+    volumes:
+      - "/opt/product-api/images:/app/images"
     networks:
       - proxy_net
 networks:

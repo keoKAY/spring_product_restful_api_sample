@@ -12,8 +12,9 @@ keycloak:
   client-secret: ${KC_CLIENT_SECRET}
 file:
     client-path: /files
-    storage-location: /Users/kk/Engineering/ite-images/
-    base-url: http://localhost:${server.port}${file.client-path}/
+    storage-location: /app/images
+    base-url: https://ite-spring.anajak-khmer.site${file.client-path}/
+  #  base-url: http://localhost:${server.port}${file.client-path}/
 # http://localhost:8080/files/
 spring:
   # issuer is the realm in keycloak that we configure
