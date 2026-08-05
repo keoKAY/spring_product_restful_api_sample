@@ -49,10 +49,16 @@ jobs:
         run:
             ./gradlew build sonar -Dsonar.qualitygate.wait=true --info
       - name: Sonar Summary
-        if: always()
+        if: always() # Runs even if the previous step fails
         run: |
           echo "## SonarQube Analysis" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "- Project: ecommerce-spring-api" >> $GITHUB_STEP_SUMMARY
-          echo "- Dashboard: ${{ secrets.SONAR_HOST_URL }}/dashboard?id=ecommerce-spring-api" >> $GITHUB_STEP_SUMMARY
-          echo "- Quality Gate: Waited for result during build" >> $GITHUB_STEP_SUMMARY
+          echo "- **Project:** ecommerce-spring-api" >> $GITHUB_STEP_SUMMARY
+          echo "- **Dashboard:** ${{ secrets.SONAR_HOST_URL }}/dashboard?id=ecommerce-spring-api" >> $GITHUB_STEP_SUMMARY
+          
+          # Check if the sonar step succeeded or failed
+          if [ "${{ steps.sonar.outcome }}" == "success" ]; then
+            echo "- **Status:** :white_check_mark: **PASSED**" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- **Status:** :x: **FAILED**" >> $GITHUB_STEP_SUMMARY
+          fi
