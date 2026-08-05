@@ -32,13 +32,13 @@ public class UserServiceImpl implements UserService {
          // linked profile to user
         profile.setUser(user);
         user.setProfile(profile);
-
+        log.info("Profile is : {}", profile);
         return userMapper.toUserResponse(userRepository.save(user));
     }
 
     @Override
     public List<UserResponse> getAllUsers() {
-        log.info("Get all users");
+        log.info("Getting all the user is triggered ");
         return userRepository.findAll()
                 .stream().map(userMapper::toUserResponse)
                 .toList();
