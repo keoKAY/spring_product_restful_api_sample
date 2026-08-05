@@ -47,4 +47,9 @@ jobs:
             SONAR_TOKEN: ${{secrets.SONAR_TOKEN}}
             SONAR_HOST_URL: ${{secrets.SONAR_HOST_URL}}
         run:
-            ./gradlew build sonar --info
+            ./gradlew build sonar -Dsonar.qualitygate.wait=true --info
+      - name: Sonar Summary
+        run: | 
+          echo "## SONARQUBE REPORTS " >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Dashboard: ${{ secrets.SONAR_HOST_URL }}/dashboard?id=ecommerce-spring-api" >> $GITHUB_STEP_SUMMARY
