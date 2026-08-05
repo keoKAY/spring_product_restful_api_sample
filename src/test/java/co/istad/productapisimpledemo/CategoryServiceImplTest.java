@@ -24,14 +24,14 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class CategoryServiceImplTest {
+class CategoryServiceImplTest {
     @Mock
     private CategoryRepository categoryRepository;
     private CategoryServiceImpl categoryService;
     private CategoryMapper categoryMapper;
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         categoryMapper = Mappers.getMapper(CategoryMapper.class);
         categoryService = new CategoryServiceImpl(categoryMapper, categoryRepository);
     }
